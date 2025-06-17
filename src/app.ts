@@ -5,17 +5,25 @@ import swaggerDefinition from './docs/swagger';
 
 const app = express();
 
-// Configurar morgan para logging
+/* 
+  * Morgan para logging de solicitudes HTTP 
+*/
 app.use(morgan('dev'));
 
-// Middleware para parsear JSON
+/* 
+  * Middleware para parsear JSON
+*/
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Configuración de Swagger
+/* 
+  * Documentación de la API
+*/
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDefinition));
 
-// Ruta raíz con información de la API
+/* 
+  * Información del API
+*/
 app.get('/', (_req, res) => {
   res.json({
     title: 'Ruta Fácil API',
@@ -24,6 +32,5 @@ app.get('/', (_req, res) => {
   });
 });
 
-// Aquí irán las demás rutas de la aplicación...
 
 export default app;
