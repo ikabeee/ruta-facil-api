@@ -1,8 +1,12 @@
 import express from 'express';
 import swaggerUi from 'swagger-ui-express';
+import morgan from 'morgan';
 import swaggerDefinition from './docs/swagger';
 
 const app = express();
+
+// Configurar morgan para logging
+app.use(morgan('dev'));
 
 // Middleware para parsear JSON
 app.use(express.json());
