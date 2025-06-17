@@ -14,9 +14,9 @@ export class UserRepository implements UserRepositoryInterface {
         try {
             const user = await this.prisma.user.findUnique({ where: { id } });
             if (!user) {
-                throw new Error("User not found");
+                throw new Error("Usuario no encontrado");
             }
-            return { code: "200", message: "User retrieved successfully", timestamp: new Date(), data: user };
+            return { code: "200", message: "Usuario encontrado satisfactoriamente", timestamp: new Date(), data: user };
         } catch (error: any) {
             throw new Error(`Error encontrando el usuario: ${error.message}`);
         }
@@ -62,7 +62,7 @@ export class UserRepository implements UserRepositoryInterface {
     async deleteUser(id: number): Promise<{ code: string; message: string; timestamp: Date; data: User; }> {
         try {
             const deletedUser = await this.prisma.user.delete({ where: { id } });
-            return { code: "200", message: "User deleted successfully", timestamp: new Date(), data: deletedUser };
+            return { code: "200", message: "Usuario eliminado satisfactoriamente", timestamp: new Date(), data: deletedUser };
         } catch (error: any) {
             throw new Error(`Error eliminando el usuario: ${error.message}`);
         }
