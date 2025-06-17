@@ -8,3 +8,4 @@ node_modules/
 
 # Ignore compiled TypeScript files
 dist/
+/generated/prisma
