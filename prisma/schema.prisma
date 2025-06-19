@@ -9,20 +9,110 @@ datasource db {
 }
 
 model User {
-  id         Int           @id @default(autoincrement())
-  name       String
-  lastName   String?      @map("last_name")
-  email      String       @unique
-  password   String
-  phone      String?
-  role       UserRole     @default(USER)
-  status     UserStatus   @default(PENDING)
-  createdAt  DateTime     @default(now()) @map("created_at")
-  updatedAt  DateTime?     @updatedAt @map("updated_at")
+  id        Int        @id @default(autoincrement())
+  name      String
+  lastName  String?    @map("last_name")
+  email     String     @unique
+  password  String
+  phone     String?
+  role      UserRole   @default(USER)
+  status    UserStatus @default(PENDING)
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime?  @updatedAt @map("updated_at")
+
   @@map("users")
 }
 
+model StarredRoute {
+  id Int     @id @default(autoincrement())
+  name String
+  description String?
+  createdAt DateTime @default(now()) @map("created_at")
+  @@map("starred_routes")
+}
 
+model Rating {
+  id Int    @id @default(autoincrement())
+  title String
+  description String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+  status RatingStatus @default(ACTIVE)
+  @@map("ratings")
+}
+
+model Route {
+  id Int      @id @default(autoincrement())
+  name String
+  img String?
+  firstPoint String @map("first_point")
+  lastPoint String @map("last_point")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+  description String?
+  @@map("routes")
+}
+
+model Stop {
+  id Int @id @default(autoincrement())
+  name String
+  lat Float
+  lng Float
+  img String?
+  createdAt DateTime @default(now()) @map("created_at")
+  @@map("stops")
+}
+
+model Vehicle {
+  id Int @id @default(autoincrement())
+  name String
+  plate String @unique
+  model String?
+  color String?
+  year Int?
+  img String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+}
+
+model VehicleLocation {
+  id Int @id @default(autoincrement())
+  vehicleId Int @map("vehicle_id")
+  lat Float
+  lng Float
+  recordedAt DateTime @default(now()) @map("recorded_at")
+  @@map("vehicle_locations")
+}
+
+model OwnerVehicle {
+  id Int @id @default(autoincrement())
+  userId Int @map("user_id")
+  vehicleId Int @map("vehicle_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+  isVerified Boolean @default(false) @map("is_verified")
+  @@map("owner_vehicles")
+}
+
+model Driver {
+  id Int @id @default(autoincrement())
+  userId Int @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+  isVerified Boolean @default(false) @map("is_verified")
+  @@map("drivers")
+}
+
+model Notification {
+  id Int @id @default(autoincrement())
+  userId Int @map("user_id")
+  title String
+  message String
+  isRead Boolean @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+  @@map("notifications")
+}
 
 enum UserRole {
   ADMIN
@@ -35,5 +125,11 @@ enum UserStatus {
   ACTIVE
   INACTIVE
   PENDING
-  BLOCKED
+  BAN
+}
+
+enum RatingStatus {
+  ACTIVE
+  INACTIVE
+  BAN
 }
