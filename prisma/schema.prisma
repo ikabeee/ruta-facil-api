@@ -1,0 +1,176 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+    provider = "prisma-client-js"
+    output   = "../generated/prisma"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id            Int        @id @default(autoincrement())
+    name          String
+    lastName      String?    @map("last_name")
+    email         String     @unique
+    password      String
+    phone         String?
+    role          UserRole   @default(USER)
+    status        UserStatus @default(PENDING)
+    emailVerified Boolean    @default(false) @map("email_verified")
+    createdAt     DateTime   @default(now()) @map("created_at")
+    updatedAt     DateTime?  @updatedAt @map("updated_at")
+
+    @@map("users")
+}
+
+model StarredRoute {
+    id          Int      @id @default(autoincrement())
+    name        String
+    description String?
+    createdAt   DateTime @default(now()) @map("created_at")
+
+    @@map("starred_routes")
+}
+
+model Rating {
+    id          Int          @id @default(autoincrement())
+    title       String
+    description String?
+    createdAt   DateTime     @default(now()) @map("created_at")
+    updatedAt   DateTime?    @updatedAt @map("updated_at")
+    status      RatingStatus @default(ACTIVE)
+
+    @@map("ratings")
+}
+
+model Route {
+    id          Int       @id @default(autoincrement())
+    name        String
+    img         String?
+    firstPoint  String    @map("first_point")
+    lastPoint   String    @map("last_point")
+    createdAt   DateTime  @default(now()) @map("created_at")
+    updatedAt   DateTime? @updatedAt @map("updated_at")
+    description String?
+
+    @@map("routes")
+}
+
+model Stop {
+    id        Int      @id @default(autoincrement())
+    name      String
+    lat       Float
+    lng       Float
+    img       String?
+    createdAt DateTime @default(now()) @map("created_at")
+
+    @@map("stops")
+}
+
+model RouteStop {
+    id        Int       @id @default(autoincrement())
+    routeId   Int       @map("route_id")
+    stopId    Int       @map("stop_id")
+    order     Int
+    createdAt DateTime  @default(now()) @map("created_at")
+    updatedAt DateTime? @updatedAt @map("updated_at")
+
+    @@map("route_stops")
+}
+
+model Vehicle {
+    id        Int       @id @default(autoincrement())
+    name      String
+    plate     String    @unique
+    model     String?
+    color     String?
+    year      Int?
+    img       String?
+    createdAt DateTime  @default(now()) @map("created_at")
+    updatedAt DateTime? @updatedAt @map("updated_at")
+
+    @@map("vehicles")
+}
+
+model VehicleLocation {
+    id         Int      @id @default(autoincrement())
+    vehicleId  Int      @map("vehicle_id")
+    lat        Float
+    lng        Float
+    recordedAt DateTime @default(now()) @map("recorded_at")
+
+    @@map("vehicle_locations")
+}
+
+model VehicleAssignment {
+    id        Int       @id @default(autoincrement())
+    vehicleId Int       @map("vehicle_id")
+    routeId   Int       @map("route_id")
+    driverId  Int       @map("driver_id")
+    startTime DateTime
+    endTime   DateTime?
+    createdAt DateTime  @default(now()) @map("created_at")
+    updatedAt DateTime? @updatedAt @map("updated_at")
+
+    @@map("vehicle_assignments")
+}
+
+model OwnerVehicle {
+    id         Int       @id @default(autoincrement())
+    userId     Int       @map("user_id")
+    vehicleId  Int       @map("vehicle_id")
+    createdAt  DateTime  @default(now()) @map("created_at")
+    updatedAt  DateTime? @updatedAt @map("updated_at")
+    isVerified Boolean   @default(false) @map("is_verified")
+
+    @@map("owner_vehicles")
+}
+
+model Driver {
+    id         Int       @id @default(autoincrement())
+    userId     Int       @map("user_id")
+    createdAt  DateTime  @default(now()) @map("created_at")
+    updatedAt  DateTime? @updatedAt @map("updated_at")
+    isVerified Boolean   @default(false) @map("is_verified")
+
+    @@map("drivers")
+}
+
+model Notification {
+    id        Int       @id @default(autoincrement())
+    userId    Int       @map("user_id")
+    title     String
+    message   String
+    isRead    Boolean   @default(false) @map("is_read")
+    createdAt DateTime  @default(now()) @map("created_at")
+    updatedAt DateTime? @updatedAt @map("updated_at")
+
+    @@map("notifications")
+}
+
+enum UserRole {
+    ADMIN
+    DRIVER
+    OWNER_VEHICLE
+    USER
+}
+
+enum UserStatus {
+    ACTIVE
+    INACTIVE
+    PENDING
+    BAN
+}
+
+enum RatingStatus {
+    ACTIVE
+    INACTIVE
+    BAN
+}
