@@ -11,12 +11,12 @@ export class ApiResponse {
         });
     }
 
-    static error(res: Response, message: string, statusCode: number = 500): Response {
+    static error(res: Response, message: string | string[], statusCode: number = 500): Response {
         return res.status(statusCode).json({
             success: false,
             timestamp: new Date().toISOString(),
             statusCode: statusCode,
-            message: message,
+            ...(Array.isArray(message) ? { error: { message } } : { message }),
         });
     }
 }

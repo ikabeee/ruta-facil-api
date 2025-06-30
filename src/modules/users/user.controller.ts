@@ -60,7 +60,7 @@ export class UserController {
                 const errorMessages = errors
                     .map(err => Object.values(err.constraints || {}))
                     .flat();
-                return ApiResponse.error(res, errorMessages.join(", "), 400);
+                return ApiResponse.error(res, errorMessages, 400);
             }
             const newUser = await this.userService.createUser(userData);
             return ApiResponse.success(res, newUser, 201);

@@ -20,12 +20,12 @@ export class CreateUserDto {
     @IsPhoneNumber()
     @MaxLength(15, { message: 'El número de teléfono no puede exceder los 15 caracteres.' })
     phone?: string;
-    @IsEnum(UserRole)
-    @IsNotEmpty({ message: 'El rol es obligatorio.' })
-    role!: UserRole;
-    @IsEnum(UserStatus)
-    @IsNotEmpty({ message: 'El estado es obligatorio.' })
-    status!: UserStatus;
+    @IsEnum(UserRole, { message: 'El rol debe ser uno de los valores permitidos: ADMIN, USER, DRIVER, OWNER_VEHICLE' })
+    @IsOptional()
+    role?: UserRole;
+    @IsEnum(UserStatus, { message: 'El estado debe ser uno de los valores permitidos: ACTIVE, INACTIVE, PENDING, BAN' })
+    @IsOptional()
+    status?: UserStatus;
     @IsBoolean({ message: 'El campo debe ser un booleano.' })
     @IsOptional()
     emailVerified?: boolean;
