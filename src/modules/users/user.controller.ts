@@ -6,6 +6,7 @@ import { ValidateParams } from "../../shared/helpers/ValidateParams";
 import { plainToInstance } from "class-transformer";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { validate } from "class-validator";
+import { UpdateUserDto } from "./dto/update-user.dto";
 
 export class UserController {
     constructor(private readonly userService: UserServiceInterface) {}
@@ -64,6 +65,50 @@ export class UserController {
             }
             const newUser = await this.userService.createUser(userData);
             return ApiResponse.success(res, newUser, 201);
+        } catch (error: any) {
+            if(error instanceof ApiError){
+                return ApiResponse.error(res, error.message, error.statusCode);
+            }
+            return ApiResponse.error(res, error.message, 500);
+        }
+    }
+    async updateUser(req: Request, res: Response): Promise<Response> {
+        try {
+            const { id } = req.params;
+            const userData = plainToInstance(UpdateUserDto, req.body);
+            const errors = await validate(userData);
+            const validationError = ValidateParams.validatePositiveInteger(+id);
+
+            if (validationError) {
+                return ApiResponse.error(res, validationError, 400);
+            }
+
+            if(errors.length > 0) {
+                const errorMessages = errors
+                    .map(err => Object.values(err.constraints || {}))
+                    .flat();
+                return ApiResponse.error(res, errorMessages, 400);
+            }
+            const updatedUser = await this.userService.updateUser(+id, userData);
+            return ApiResponse.success(res, updatedUser, 200);
+
+        }catch(error: any){
+            if(error instanceof ApiError){
+                return ApiResponse.error(res, error.message, error.statusCode);
+            }
+            return ApiResponse.error(res, error.message, 500);
+        }
+    }
+
+    async deleteUser(req: Request, res: Response): Promise<Response> {
+        try {
+            const { id } = req.params;
+            const validationError = ValidateParams.validatePositiveInteger(+id);
+            if (validationError) {
+                return ApiResponse.error(res, validationError, 400);
+            }
+            await this.userService.deleteUser(+id);
+            return ApiResponse.success(res, { message: "Usuario eliminado correctamente" }, 200);
         } catch (error: any) {
             if(error instanceof ApiError){
                 return ApiResponse.error(res, error.message, error.statusCode);
