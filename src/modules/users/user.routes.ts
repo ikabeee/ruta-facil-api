@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { UserRepository } from './user.repository';
@@ -9,6 +9,8 @@ const userService = new UserService(userRepository)
 const userController = new UserController(userService);
 const router = express.Router();
 
-router.get('/', userController.findAllUsers())
+router.get('/', async (req: Request, res: Response) => { await userController.findAllUsers(req, res); });
+router.get('/:id', async (req: Request, res: Response) => { await userController.findUserById(req, res); });
+router.post('/create', async (req: Request, res: Response) => { await userController.createUser(req, res); });
 
 export default router;

@@ -23,6 +23,9 @@ export class UserRepository implements UserRepositoryInterface {
             }
             return user;
         } catch (error: any) {
+            if(error instanceof ApiError){
+                throw error;
+            }
             throw new ApiError(500, `Error al buscar el usuario con id ${id}`);
         }
 
@@ -37,6 +40,9 @@ export class UserRepository implements UserRepositoryInterface {
             }
             return user;
         } catch (error: any) {
+            if(error instanceof ApiError){
+                throw error;
+            }
             throw new ApiError(500, `Error al buscar el usuario con email ${email}`);
         }
     }
@@ -45,6 +51,7 @@ export class UserRepository implements UserRepositoryInterface {
             const existingUser = await this.prisma.user.findUnique({
                 where: { email: userData.email }
             });
+
             if (existingUser) {
                 throw new ApiError(409, `Usuario con email ${userData.email} ya existe.`);
             }
@@ -57,6 +64,9 @@ export class UserRepository implements UserRepositoryInterface {
             });
             return user;
         } catch (error: any) {
+            if (error instanceof ApiError) {
+                throw error;
+            }
             throw new ApiError(500, `Error al crear el usuario: ${error.message}`);
         }
 
@@ -78,6 +88,9 @@ export class UserRepository implements UserRepositoryInterface {
             });
             return userUpdated;
         } catch (error: any) {
+            if (error instanceof ApiError) {
+                throw error;
+            }
             throw new ApiError(500, `Error al actualizar el usuario con id ${id}`);
         }
 
@@ -94,6 +107,9 @@ export class UserRepository implements UserRepositoryInterface {
                 where: { id }
             });
         } catch (error: any) {
+            if (error instanceof ApiError) {
+                throw error;
+            }
             throw new ApiError(500, `Error al buscar el usuario con id ${id}`);
         }
     }
