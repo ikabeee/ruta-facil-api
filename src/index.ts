@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
 import userRoutes from './modules/users/user.routes';
+import routesRoutes from './modules/routes/route.routes';
 
 const app = express();
 /* Middlewares */
@@ -18,6 +19,8 @@ app.use(express.json());
 
 /* Rutas */
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/routes', routesRoutes);
+
 /* */
 dotenv.config();
 const PORT = process.env.PORT || 3000;
