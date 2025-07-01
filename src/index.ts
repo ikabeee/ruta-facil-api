@@ -9,6 +9,7 @@ import starredRoutes from './modules/starred-route/starred-route.routes';
 import stopRoutes from './modules/stops/stop.routes';
 import routeStopRoutes from './modules/route-stop/route-stop.routes';
 import vehicleRoutes from './modules/vehicle/vehicle.routes';
+import vehicleLocationRoutes from './modules/vehicle-location/vehicle-location.routes';
 
 const app = express();
 /* Middlewares */
@@ -30,6 +31,7 @@ app.use('/api/v1/starred-routes', starredRoutes);
 app.use('/api/v1/stops', stopRoutes);
 app.use('/api/v1/route-stops', routeStopRoutes);
 app.use('/api/v1/vehicles', vehicleRoutes);
+app.use('/api/v1/vehicle-locations', vehicleLocationRoutes);
 /* */
 
 dotenv.config();
