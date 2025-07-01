@@ -7,6 +7,7 @@ import routesRoutes from './modules/routes/route.routes';
 import ratingsRoutes from './modules/ratings/rating.routes';
 import starredRoutes from './modules/starred-route/starred-route.routes';
 import stopRoutes from './modules/stops/stop.routes';
+import routeStopRoutes from './modules/route-stop/route-stop.routes';
 
 const app = express();
 /* Middlewares */
@@ -26,6 +27,7 @@ app.use('/api/v1/routes', routesRoutes);
 app.use('/api/v1/ratings', ratingsRoutes);
 app.use('/api/v1/starred-routes', starredRoutes);
 app.use('/api/v1/stops', stopRoutes);
+app.use('/api/v1/route-stops', routeStopRoutes);
 
 /* */
 dotenv.config();
