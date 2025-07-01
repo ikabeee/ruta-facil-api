@@ -4,6 +4,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import userRoutes from './modules/users/user.routes';
 import routesRoutes from './modules/routes/route.routes';
+import ratingsRoutes from './modules/ratings/rating.routes';
 
 const app = express();
 /* Middlewares */
@@ -20,6 +21,7 @@ app.use(express.json());
 /* Rutas */
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/routes', routesRoutes);
+app.use('/api/v1/ratings', ratingsRoutes);
 
 /* */
 dotenv.config();
