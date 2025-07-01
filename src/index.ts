@@ -12,6 +12,7 @@ import vehicleRoutes from './modules/vehicle/vehicle.routes';
 import vehicleLocationRoutes from './modules/vehicle-location/vehicle-location.routes';
 import vehicleAssignmentRoutes from './modules/vehicle-assigment/vehicle-assigment.routes';
 import ownerVehicleRoutes from './modules/owner-vehicle/owner-vehicle.routes';
+import driverRoutes from './modules/driver/driver.routes';
 
 const app = express();
 /* Middlewares */
@@ -36,6 +37,7 @@ app.use('/api/v1/vehicles', vehicleRoutes);
 app.use('/api/v1/vehicle-locations', vehicleLocationRoutes);
 app.use('/api/v1/vehicle-assignments', vehicleAssignmentRoutes);
 app.use('/api/v1/owner-vehicles', ownerVehicleRoutes);
+app.use('/api/v1/drivers', driverRoutes);
 /* */
 
 dotenv.config();
