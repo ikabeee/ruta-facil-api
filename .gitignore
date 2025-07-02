@@ -4,6 +4,39 @@
 # Node.js dependencies
 node_modules/
 
+# Build output
+dist/
+
+# TypeScript build info
+*.tsbuildinfo
+
 # VSCode settings
 .vscode/
+
+# Prisma generated files
 /generated/prisma
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
