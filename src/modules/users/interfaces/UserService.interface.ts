@@ -9,4 +9,5 @@ export interface UserServiceInterface {
     createUser(userData: CreateUserDto): Promise<User>;
     updateUser(id: number, userData: UpdateUserDto): Promise<User>;
     deleteUser(id: number): Promise<void>;
+    comparePasswords(plainPassword: string, hashedPassword: string): Promise<boolean>;
 }
