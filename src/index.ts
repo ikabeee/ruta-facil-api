@@ -1,7 +1,12 @@
+/* Dependencias */
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
+/* Archivos de configuración */
+dotenv.config();
+import { corsConfig } from './shared/config/corsConfig';
+/* Rutas */
 import userRoutes from './modules/users/user.routes';
 import routesRoutes from './modules/routes/route.routes';
 import ratingsRoutes from './modules/ratings/rating.routes';
@@ -16,13 +21,9 @@ import driverRoutes from './modules/driver/driver.routes';
 import notificationRoutes from './modules/notification/notification.routes';
 
 const app = express();
+
 /* Middlewares */
-app.use(cors({
-    origin: process.env.CORS_ORIGIN,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-}));
+app.use(cors(corsConfig));
 app.use(morgan('dev'));
 app.use(express.json());
 /* */
