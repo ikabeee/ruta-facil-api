@@ -19,6 +19,7 @@ import vehicleAssignmentRoutes from './modules/vehicle-assigment/vehicle-assigme
 import ownerVehicleRoutes from './modules/owner-vehicle/owner-vehicle.routes';
 import driverRoutes from './modules/driver/driver.routes';
 import notificationRoutes from './modules/notification/notification.routes';
+import { authRoutes } from './modules/auth/auth.routes';
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use(express.json());
 /* */
 
 /* Rutas */
+app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/routes', routesRoutes);
 app.use('/api/v1/ratings', ratingsRoutes);

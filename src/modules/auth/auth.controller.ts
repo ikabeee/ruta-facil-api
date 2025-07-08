@@ -20,7 +20,7 @@ export class AuthController {
     /**
      * Iniciar sesión
      */
-    public async login(req: Request, res: Response): Promise<Response > {
+    public async login(req: Request, res: Response): Promise<Response> {
         try {
             // Validar datos de entrada
             const loginDto = plainToClass(LoginDto, req.body);
