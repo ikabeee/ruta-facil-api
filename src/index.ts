@@ -20,6 +20,7 @@ import ownerVehicleRoutes from './modules/owner-vehicle/owner-vehicle.routes';
 import driverRoutes from './modules/driver/driver.routes';
 import notificationRoutes from './modules/notification/notification.routes';
 import { authRoutes } from './modules/auth/auth.routes';
+import { setupSwagger } from './shared/config/swagger.config';
 
 const app = express();
 
@@ -45,9 +46,13 @@ app.use('/api/v1/drivers', driverRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 /* */
 
+// Configurar Swagger
+setupSwagger(app);
+
 dotenv.config();
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
     console.log(`El servidor está corriendo en el puerto: ${PORT}`);
+    console.log(`Documentación Swagger disponible en: http://localhost:${PORT}/api-docs`);
 });
