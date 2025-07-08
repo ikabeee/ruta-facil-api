@@ -9,4 +9,6 @@ export interface UserRepositoryInterface {
     createUser(userData: CreateUserDto): Promise<User>;
     updateUser(id: number, userData: UpdateUserDto): Promise<User>;
     deleteUser(id: number): Promise<void>;
+    hashPassword(password: string): Promise<string>;
+    comparePasswords(plainPassword: string, hashedPassword: string): Promise<boolean>;
 }
