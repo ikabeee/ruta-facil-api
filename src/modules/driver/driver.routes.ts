@@ -10,6 +10,7 @@ const driverService = new DriverService(driverRepository);
 const driverController = new DriverController(driverService);
 const router = express.Router();
 
+// Define the routes for the driver module
 router.get('/', async (req: Request, res: Response) => { await driverController.findAllDrivers(req, res); });
 router.get('/:id', async (req: Request, res: Response) => { await driverController.findDriverById(req, res); });
 router.get('/user/:userId', async (req: Request, res: Response) => { await driverController.findDriverByUserId(req, res); });
