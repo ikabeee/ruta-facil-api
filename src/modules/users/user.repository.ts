@@ -23,7 +23,7 @@ export class UserRepository implements UserRepositoryInterface {
             }
             return user;
         } catch (error: any) {
-            if(error instanceof ApiError){
+            if (error instanceof ApiError) {
                 throw error;
             }
             throw new ApiError(500, `Error al buscar el usuario con id ${id}`);
@@ -40,7 +40,7 @@ export class UserRepository implements UserRepositoryInterface {
             }
             return user;
         } catch (error: any) {
-            if(error instanceof ApiError){
+            if (error instanceof ApiError) {
                 throw error;
             }
             throw new ApiError(500, `Error al buscar el usuario con email ${email}`);
@@ -59,7 +59,7 @@ export class UserRepository implements UserRepositoryInterface {
             const user = await this.prisma.user.create({
                 data: {
                     ...data,
-                    password: await bcrypt.hash(password, 10)
+                    password: await this.hashPassword(password)
                 }
             });
             return user;
@@ -112,5 +112,12 @@ export class UserRepository implements UserRepositoryInterface {
             }
             throw new ApiError(500, `Error al buscar el usuario con id ${id}`);
         }
+    }
+    async hashPassword(password: string): Promise<string> {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        return hashedPassword;
+    }
+    async comparePasswords(plainPassword: string, hashedPassword: string): Promise<boolean> {
+        return bcrypt.compare(plainPassword, hashedPassword);
     }
 }
