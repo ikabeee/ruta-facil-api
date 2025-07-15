@@ -5,7 +5,6 @@ export class CreateNotificationDto {
     @Min(1, { message: 'El ID del usuario debe ser mayor a 0.' })
     @IsNotEmpty({ message: 'El ID del usuario es obligatorio.' })
     userId!: number;
-
     @IsString({ message: 'El título debe ser una cadena de texto.' })
     @IsNotEmpty({ message: 'El título es obligatorio.' })
     @MaxLength(255, { message: 'El título no puede exceder los 255 caracteres.' })
