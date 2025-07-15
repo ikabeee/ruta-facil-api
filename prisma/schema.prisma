@@ -24,6 +24,8 @@ model User {
     role          UserRole       @default(USER)
     status        UserStatus     @default(PENDING)
     emailVerified Boolean        @default(false) @map("email_verified")
+    lastAccess    DateTime?      @map("last_access")
+    permissions   String[]       @default([])
     createdAt     DateTime       @default(now()) @map("created_at")
     updatedAt     DateTime?      @updatedAt @map("updated_at")
     notifications Notification[]
@@ -50,6 +52,15 @@ model Rating {
     id          Int          @id @default(autoincrement())
     title       String
     description String?
+    rating      Float        @default(0)
+    maxRating   Int          @default(5) @map("max_rating")
+    category    String?
+    comment     String?
+    userType    String?      @map("user_type")
+    service     String?
+    route       String?
+    driver      String?
+    unit        String?
     createdAt   DateTime     @default(now()) @map("created_at")
     updatedAt   DateTime?    @updatedAt @map("updated_at")
     status      RatingStatus @default(ACTIVE)
@@ -63,43 +74,62 @@ model Rating {
 
 model Route {
     id            Int            @id @default(autoincrement())
+    code          String?        @unique
     name          String
     img           String?
     firstPoint    String         @map("first_point")
     lastPoint     String         @map("last_point")
+    description   String?
+    distance      Float?
+    estimatedTime Int?           @map("estimated_time")
+    totalStops    Int            @default(0) @map("total_stops")
+    assignedUnits Int            @default(0) @map("assigned_units")
+    dailyTrips    Int            @default(0) @map("daily_trips")
+    operatingHours String?       @map("operating_hours")
+    status        RouteStatus    @default(ACTIVE)
     createdAt     DateTime       @default(now()) @map("created_at")
     updatedAt     DateTime?      @updatedAt @map("updated_at")
-    description   String?
     vehicleId     Int?           @map("vehicle_id")
     vehicle       Vehicle?       @relation(fields: [vehicleId], references: [id])
     incidents     Incident[]
     starredRoutes StarredRoute[]
     routeStops    RouteStop[]
+    schedules     Schedule[]
 
     @@map("routes")
 }
 
 model Incident {
-    id          Int       @id @default(autoincrement())
+    id          Int             @id @default(autoincrement())
+    type        String?
     title       String
     description String
-    createdAt   DateTime  @default(now()) @map("created_at")
-    updatedAt   DateTime? @updatedAt @map("updated_at")
-    routeId     Int       @map("route_id")
-    route       Route     @relation(fields: [routeId], references: [id])
+    priority    IncidentPriority @default(MEDIUM)
+    location    String?
+    unit        String?
+    reportedBy  String?
+    status      IncidentStatus   @default(PENDING)
+    createdAt   DateTime         @default(now()) @map("created_at")
+    updatedAt   DateTime?        @updatedAt @map("updated_at")
+    routeId     Int              @map("route_id")
+    route       Route            @relation(fields: [routeId], references: [id])
 
     @@map("incidents")
 }
 
 model Stop {
-    id         Int         @id @default(autoincrement())
-    name       String
-    lat        Float
-    lng        Float
-    img        String?
-    createdAt  DateTime    @default(now()) @map("created_at")
-    routeStops RouteStop[]
-    routeId    Int?
+    id           Int         @id @default(autoincrement())
+    name         String
+    address      String?
+    lat          Float
+    lng          Float
+    facilities   String?
+    accessibility String?
+    status       StopStatus  @default(ACTIVE)
+    img          String?
+    createdAt    DateTime    @default(now()) @map("created_at")
+    routeStops   RouteStop[]
+    routeId      Int?
 
     @@map("stops")
 }
@@ -124,6 +154,10 @@ model Vehicle {
     model              String?
     color              String?
     year               Int?
+    passengers         Int?
+    fuel               Float?              @default(100)
+    mileage            Int?                @default(0)
+    nextMaintenance    DateTime?           @map("next_maintenance")
     img                String?
     ownerId            Int                 @map("owner_id")
     createdAt          DateTime            @default(now()) @map("created_at")
@@ -167,7 +201,12 @@ model VehicleAssignment {
 model OwnerVehicle {
     id            Int            @id @default(autoincrement())
     userId        Int            @map("user_id")
-    vehicleId     Int            @map("vehicle_id")
+    company       String?
+    contact       String?
+    rfc           String?
+    address       String?
+    totalVehicles Int            @default(0) @map("total_vehicles")
+    lastPayment   DateTime?      @map("last_payment")
     createdAt     DateTime       @default(now()) @map("created_at")
     updatedAt     DateTime?      @updatedAt @map("updated_at")
     isVerified    Boolean        @default(false) @map("is_verified")
@@ -180,6 +219,11 @@ model OwnerVehicle {
 model Driver {
     id                 Int                 @id @default(autoincrement())
     userId             Int                 @map("user_id")
+    license            String?
+    licenseExpiration  DateTime?           @map("license_expiration")
+    experience         String?
+    rating             Float?              @default(0)
+    totalTrips         Int                 @default(0) @map("total_trips")
     createdAt          DateTime            @default(now()) @map("created_at")
     updatedAt          DateTime?           @updatedAt @map("updated_at")
     isVerified         Boolean             @default(false) @map("is_verified")
@@ -206,6 +250,22 @@ model Notification {
     @@map("notifications")
 }
 
+model Schedule {
+    id          Int            @id @default(autoincrement())
+    routeId     Int            @map("route_id")
+    startTime   String         @map("start_time")
+    endTime     String         @map("end_time")
+    frequency   String?
+    days        String?
+    totalTrips  Int            @default(0) @map("total_trips")
+    status      ScheduleStatus @default(ACTIVE)
+    createdAt   DateTime       @default(now()) @map("created_at")
+    updatedAt   DateTime?      @updatedAt @map("updated_at")
+    route       Route          @relation(fields: [routeId], references: [id])
+
+    @@map("schedules")
+}
+
 enum UserRole {
     ADMIN
     DRIVER
@@ -224,4 +284,36 @@ enum RatingStatus {
     ACTIVE
     INACTIVE
     BAN
+}
+
+enum RouteStatus {
+    ACTIVE
+    INACTIVE
+    IN_REVIEW
+    SUSPENDED
+}
+
+enum StopStatus {
+    ACTIVE
+    INACTIVE
+    MAINTENANCE
+}
+
+enum ScheduleStatus {
+    ACTIVE
+    SUSPENDED
+}
+
+enum IncidentStatus {
+    PENDING
+    IN_PROGRESS
+    RESOLVED
+    CANCELLED
+}
+
+enum IncidentPriority {
+    LOW
+    MEDIUM
+    HIGH
+    CRITICAL
 }

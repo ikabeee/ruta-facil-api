@@ -11,4 +11,17 @@ export interface UserRepositoryInterface {
     deleteUser(id: number): Promise<void>;
     hashPassword(password: string): Promise<string>;
     comparePasswords(plainPassword: string, hashedPassword: string): Promise<boolean>;
+    getStats(): Promise<{
+        total: number;
+        active: number;
+        pending: number;
+        byRole: {
+            admin: number;
+            user: number;
+            driver: number;
+        };
+        emailVerified: number;
+        recentUsers: number;
+    }>;
+
 }

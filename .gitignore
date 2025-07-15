@@ -7,3 +7,6 @@ node_modules/
 # VSCode settings
 .vscode/
 /generated/prisma
+
+# Build output
+dist/

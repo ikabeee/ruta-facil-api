@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, MaxLength, IsOptional, IsInt, Min, Max } from 'class-validator';
+import { IsString, IsNotEmpty, MaxLength, IsOptional, IsInt, Min, Max, IsPositive } from 'class-validator';
 
 export class CreateVehicleDto {
     @IsString({ message: 'El nombre debe ser una cadena de texto.' })
@@ -28,7 +28,16 @@ export class CreateVehicleDto {
     year?: number;
 
     @IsOptional()
+    @IsInt({ message: 'El número de pasajeros debe ser un número entero.' })
+    @Min(1, { message: 'El número de pasajeros debe ser mayor a 0.' })
+    passengers?: number;
+
+    @IsOptional()
     @IsString({ message: 'La imagen debe ser una cadena de texto.' })
     @MaxLength(255, { message: 'La URL de la imagen no puede exceder los 255 caracteres.' })
     img?: string;
+
+    @IsInt({ message: 'El ID del propietario debe ser un número entero.' })
+    @IsPositive({ message: 'El ID del propietario debe ser un número positivo.' })
+    ownerId!: number;
 }

@@ -10,6 +10,7 @@ const routeService = new RouteService(routeRepository);
 const routeController = new RouteController(routeService);
 const router = express.Router();
 
+router.get('/stats', async (req: Request, res: Response) => { await routeController.getStats(req, res); });
 router.get('/', async (req: Request, res: Response) => { await routeController.findAllRoutes(req, res); });
 router.get('/search', async (req: Request, res: Response) => { await routeController.findRoutesByName(req, res); });
 router.get('/:id', async (req: Request, res: Response) => { await routeController.findRouteById(req, res); });

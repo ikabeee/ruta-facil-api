@@ -40,7 +40,9 @@ export class StarredRouteRepository implements StarredRouteRepositoryInterface {
             const starredRoute = await this.prisma.starredRoute.create({
                 data: {
                     name: starredRouteData.name,
-                    description: starredRouteData.description
+                    description: starredRouteData.description,
+                    routeId: starredRouteData.routeId,
+                    userId: starredRouteData.userId
                 }
             });
             return starredRoute;

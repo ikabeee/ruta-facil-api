@@ -32,4 +32,23 @@ export class RouteService implements RouteServiceInterface {
     async deleteRoute(id: number): Promise<void> {
         return this.routeRepository.deleteRoute(id);
     }
+
+    async getStats(): Promise<{
+        total: number;
+        active: number;
+        inactive: number;
+        averageDistance: number;
+        totalStops: number;
+        assignedUnits: number;
+        dailyTrips: number;
+        topRoutes: Array<{
+            id: number;
+            name: string;
+            code: string | null;
+            totalStops: number;
+            assignedUnits: number;
+        }>;
+    }> {
+        return this.routeRepository.getStats();
+    }
 }

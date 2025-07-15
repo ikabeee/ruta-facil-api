@@ -47,8 +47,18 @@ export class OwnerVehicleRepository implements OwnerVehicleRepositoryInterface {
 
     async findByVehicleId(vehicleId: number): Promise<OwnerVehicle[]> {
         try {
+            // Buscar OwnerVehicle a través de la relación con Vehicle
             const ownerVehicles = await this.prisma.ownerVehicle.findMany({
-                where: { vehicleId },
+                where: {
+                    vehicles: {
+                        some: {
+                            id: vehicleId
+                        }
+                    }
+                },
+                include: {
+                    vehicles: true
+                },
                 orderBy: { createdAt: 'desc' }
             });
             return ownerVehicles;
@@ -59,10 +69,18 @@ export class OwnerVehicleRepository implements OwnerVehicleRepositoryInterface {
 
     async findByUserIdAndVehicleId(userId: number, vehicleId: number): Promise<OwnerVehicle | null> {
         try {
+            // Buscar OwnerVehicle por userId que tenga el vehículo específico
             const ownerVehicle = await this.prisma.ownerVehicle.findFirst({
                 where: {
                     userId,
-                    vehicleId
+                    vehicles: {
+                        some: {
+                            id: vehicleId
+                        }
+                    }
+                },
+                include: {
+                    vehicles: true
                 }
             });
             return ownerVehicle;
@@ -73,27 +91,30 @@ export class OwnerVehicleRepository implements OwnerVehicleRepositoryInterface {
 
     async createOwnerVehicle(ownerVehicleData: CreateOwnerVehicleDto): Promise<OwnerVehicle> {
         try {
-            // Verificar si ya existe una relación entre el usuario y el vehículo
-            const existingRelation = await this.prisma.ownerVehicle.findFirst({
+            // Verificar si ya existe un registro de OwnerVehicle para este usuario
+            const existingOwner = await this.prisma.ownerVehicle.findFirst({
                 where: {
-                    userId: ownerVehicleData.userId,
-                    vehicleId: ownerVehicleData.vehicleId
+                    userId: ownerVehicleData.userId
                 }
             });
 
-            if (existingRelation) {
-                throw new ApiError(409, `La relación entre el usuario ${ownerVehicleData.userId} y el vehículo ${ownerVehicleData.vehicleId} ya existe.`);
+            if (existingOwner) {
+                throw new ApiError(409, `Ya existe un registro de propietario para el usuario ${ownerVehicleData.userId}.`);
             }
 
             const ownerVehicle = await this.prisma.ownerVehicle.create({
-                data: ownerVehicleData
+                data: ownerVehicleData,
+                include: {
+                    vehicles: true,
+                    notifications: true
+                }
             });
             return ownerVehicle;
         } catch (error: any) {
             if (error instanceof ApiError) {
                 throw error;
             }
-            throw new ApiError(500, `Error al crear la relación propietario-vehículo: ${error.message}`);
+            throw new ApiError(500, `Error al crear el propietario de vehículo: ${error.message}`);
         }
     }
 
@@ -106,29 +127,27 @@ export class OwnerVehicleRepository implements OwnerVehicleRepositoryInterface {
                 throw new ApiError(404, `Propietario de vehículo con id ${id} no encontrado.`);
             }
 
-            // Si se están actualizando userId o vehicleId, verificar que no haya conflictos
-            if ((ownerVehicleData.userId && ownerVehicleData.userId !== ownerVehicle.userId) ||
-                (ownerVehicleData.vehicleId && ownerVehicleData.vehicleId !== ownerVehicle.vehicleId)) {
-                
-                const checkUserId = ownerVehicleData.userId || ownerVehicle.userId;
-                const checkVehicleId = ownerVehicleData.vehicleId || ownerVehicle.vehicleId;
-
-                const existingRelation = await this.prisma.ownerVehicle.findFirst({
+            // Si se está actualizando userId, verificar que no haya conflictos
+            if (ownerVehicleData.userId && ownerVehicleData.userId !== ownerVehicle.userId) {
+                const existingOwner = await this.prisma.ownerVehicle.findFirst({
                     where: {
-                        userId: checkUserId,
-                        vehicleId: checkVehicleId,
+                        userId: ownerVehicleData.userId,
                         id: { not: id }
                     }
                 });
 
-                if (existingRelation) {
-                    throw new ApiError(409, `La relación entre el usuario ${checkUserId} y el vehículo ${checkVehicleId} ya existe.`);
+                if (existingOwner) {
+                    throw new ApiError(409, `Ya existe un registro de propietario para el usuario ${ownerVehicleData.userId}.`);
                 }
             }
 
             const updatedOwnerVehicle = await this.prisma.ownerVehicle.update({
                 where: { id },
-                data: ownerVehicleData
+                data: ownerVehicleData,
+                include: {
+                    vehicles: true,
+                    notifications: true
+                }
             });
             return updatedOwnerVehicle;
         } catch (error: any) {

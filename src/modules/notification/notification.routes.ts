@@ -12,6 +12,7 @@ const router = express.Router();
 
 // Rutas principales
 router.get('/', async (req: Request, res: Response) => { await notificationController.findAllNotifications(req, res); });
+router.get('/stats', async (req: Request, res: Response) => { await notificationController.getStats(req, res); });
 router.get('/:id', async (req: Request, res: Response) => { await notificationController.findNotificationById(req, res); });
 router.post('/create', async (req: Request, res: Response) => { await notificationController.createNotification(req, res); });
 router.put('/update/:id', async (req: Request, res: Response) => { await notificationController.updateNotification(req, res); });

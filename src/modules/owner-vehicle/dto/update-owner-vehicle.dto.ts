@@ -1,4 +1,4 @@
-import { IsBoolean, IsNumber, IsOptional, Min } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class UpdateOwnerVehicleDto {
     @IsOptional()
@@ -7,9 +7,25 @@ export class UpdateOwnerVehicleDto {
     userId?: number;
 
     @IsOptional()
-    @IsNumber({}, { message: 'El ID del vehículo debe ser un número.' })
-    @Min(1, { message: 'El ID del vehículo debe ser mayor a 0.' })
-    vehicleId?: number;
+    @IsString({ message: 'La empresa debe ser una cadena de texto.' })
+    company?: string;
+
+    @IsOptional()
+    @IsString({ message: 'El contacto debe ser una cadena de texto.' })
+    contact?: string;
+
+    @IsOptional()
+    @IsString({ message: 'El RFC debe ser una cadena de texto.' })
+    rfc?: string;
+
+    @IsOptional()
+    @IsString({ message: 'La dirección debe ser una cadena de texto.' })
+    address?: string;
+
+    @IsOptional()
+    @IsNumber({}, { message: 'El total de vehículos debe ser un número.' })
+    @Min(0, { message: 'El total de vehículos debe ser mayor o igual a 0.' })
+    totalVehicles?: number;
 
     @IsOptional()
     @IsBoolean({ message: 'El campo isVerified debe ser un booleano.' })

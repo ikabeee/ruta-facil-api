@@ -145,4 +145,111 @@ export class VehicleLocationRepository implements VehicleLocationRepositoryInter
             throw new ApiError(500, `Error al eliminar la ubicación del vehículo con id ${id}`);
         }
     }
+
+    async getStats(): Promise<{
+        totalRecords: number;
+        uniqueVehicles: number;
+        recentRecords: number;
+        oldestRecord: Date | null;
+        latestRecord: Date | null;
+        byTimeRange: {
+            today: number;
+            thisWeek: number;
+            thisMonth: number;
+        };
+        mostActiveVehicles: Array<{
+            vehicleId: number;
+            vehicleName: string;
+            plate: string;
+            recordCount: number;
+            lastUpdate: Date;
+        }>;
+    }> {
+        try {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+            const [
+                totalRecords,
+                uniqueVehicles,
+                recentRecords,
+                todayRecords,
+                weekRecords,
+                monthRecords,
+                oldestRecord,
+                latestRecord,
+                vehicleStats
+            ] = await Promise.all([
+                this.prisma.vehicleLocation.count(),
+                this.prisma.vehicleLocation.groupBy({
+                    by: ['vehicleId'],
+                    _count: { vehicleId: true }
+                }).then(result => result.length),
+                this.prisma.vehicleLocation.count({
+                    where: { recordedAt: { gte: dayAgo } }
+                }),
+                this.prisma.vehicleLocation.count({
+                    where: { recordedAt: { gte: today } }
+                }),
+                this.prisma.vehicleLocation.count({
+                    where: { recordedAt: { gte: weekAgo } }
+                }),
+                this.prisma.vehicleLocation.count({
+                    where: { recordedAt: { gte: monthAgo } }
+                }),
+                this.prisma.vehicleLocation.findFirst({
+                    orderBy: { recordedAt: 'asc' },
+                    select: { recordedAt: true }
+                }),
+                this.prisma.vehicleLocation.findFirst({
+                    orderBy: { recordedAt: 'desc' },
+                    select: { recordedAt: true }
+                }),
+                this.prisma.vehicleLocation.groupBy({
+                    by: ['vehicleId'],
+                    _count: { vehicleId: true },
+                    _max: { recordedAt: true },
+                    orderBy: { _count: { vehicleId: 'desc' } },
+                    take: 5
+                })
+            ]);
+
+            // Get vehicle details for most active vehicles
+            const vehicleIds = vehicleStats.map(stat => stat.vehicleId);
+            const vehicles = await this.prisma.vehicle.findMany({
+                where: { id: { in: vehicleIds } },
+                select: { id: true, name: true, plate: true }
+            });
+
+            const mostActiveVehicles = vehicleStats.map(stat => {
+                const vehicle = vehicles.find(v => v.id === stat.vehicleId);
+                return {
+                    vehicleId: stat.vehicleId,
+                    vehicleName: vehicle?.name || 'Unknown',
+                    plate: vehicle?.plate || 'Unknown',
+                    recordCount: stat._count.vehicleId,
+                    lastUpdate: stat._max.recordedAt || new Date()
+                };
+            });
+
+            return {
+                totalRecords,
+                uniqueVehicles,
+                recentRecords,
+                oldestRecord: oldestRecord?.recordedAt || null,
+                latestRecord: latestRecord?.recordedAt || null,
+                byTimeRange: {
+                    today: todayRecords,
+                    thisWeek: weekRecords,
+                    thisMonth: monthRecords
+                },
+                mostActiveVehicles
+            };
+        } catch (error: any) {
+            throw new ApiError(500, `Error al obtener estadísticas de ubicaciones: ${error.message}`);
+        }
+    }
 }

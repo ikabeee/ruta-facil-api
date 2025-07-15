@@ -36,4 +36,26 @@ export class VehicleLocationService implements VehicleLocationServiceInterface {
     async deleteVehicleLocation(id: number): Promise<void> {
         return this.vehicleLocationRepository.deleteVehicleLocation(id);
     }
+
+    async getStats(): Promise<{
+        totalRecords: number;
+        uniqueVehicles: number;
+        recentRecords: number; // Last 24 hours
+        oldestRecord: Date | null;
+        latestRecord: Date | null;
+        byTimeRange: {
+            today: number;
+            thisWeek: number;
+            thisMonth: number;
+        };
+        mostActiveVehicles: Array<{
+            vehicleId: number;
+            vehicleName: string;
+            plate: string;
+            recordCount: number;
+            lastUpdate: Date;
+        }>;
+    }> {
+        return this.vehicleLocationRepository.getStats();
+    }
 }

@@ -11,4 +11,5 @@ export interface NotificationServiceInterface {
     deleteNotification(id: number): Promise<void>;
     markAsRead(id: number): Promise<Notification>;
     markAllAsReadByUserId(userId: number): Promise<void>;
+    getStats(): Promise<any>;
 }
