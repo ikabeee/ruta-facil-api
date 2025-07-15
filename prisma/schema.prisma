@@ -15,17 +15,20 @@ datasource db {
 }
 
 model User {
-    id            Int        @id @default(autoincrement())
+    id            Int            @id @default(autoincrement())
     name          String
-    lastName      String?    @map("last_name")
-    email         String     @unique
+    lastName      String?        @map("last_name")
+    email         String         @unique
     password      String
     phone         String?
-    role          UserRole   @default(USER)
-    status        UserStatus @default(PENDING)
-    emailVerified Boolean    @default(false) @map("email_verified")
-    createdAt     DateTime   @default(now()) @map("created_at")
-    updatedAt     DateTime?  @updatedAt @map("updated_at")
+    role          UserRole       @default(USER)
+    status        UserStatus     @default(PENDING)
+    emailVerified Boolean        @default(false) @map("email_verified")
+    createdAt     DateTime       @default(now()) @map("created_at")
+    updatedAt     DateTime?      @updatedAt @map("updated_at")
+    notifications Notification[]
+    starredRoutes StarredRoute[]
+    ratings       Rating[]
 
     @@map("users")
 }
@@ -34,6 +37,10 @@ model StarredRoute {
     id          Int      @id @default(autoincrement())
     name        String
     description String?
+    routeId     Int      @map("route_id")
+    userId      Int      @map("user_id")
+    routes      Route    @relation(fields: [routeId], references: [id])
+    users       User     @relation(fields: [userId], references: [id])
     createdAt   DateTime @default(now()) @map("created_at")
 
     @@map("starred_routes")
@@ -46,30 +53,53 @@ model Rating {
     createdAt   DateTime     @default(now()) @map("created_at")
     updatedAt   DateTime?    @updatedAt @map("updated_at")
     status      RatingStatus @default(ACTIVE)
+    User        User?        @relation(fields: [userId], references: [id])
+    userId      Int?
+    Vehicle     Vehicle?     @relation(fields: [vehicleId], references: [id])
+    vehicleId   Int?
 
     @@map("ratings")
 }
 
 model Route {
-    id          Int       @id @default(autoincrement())
-    name        String
-    img         String?
-    firstPoint  String    @map("first_point")
-    lastPoint   String    @map("last_point")
-    createdAt   DateTime  @default(now()) @map("created_at")
-    updatedAt   DateTime? @updatedAt @map("updated_at")
-    description String?
+    id            Int            @id @default(autoincrement())
+    name          String
+    img           String?
+    firstPoint    String         @map("first_point")
+    lastPoint     String         @map("last_point")
+    createdAt     DateTime       @default(now()) @map("created_at")
+    updatedAt     DateTime?      @updatedAt @map("updated_at")
+    description   String?
+    vehicleId     Int?           @map("vehicle_id")
+    vehicle       Vehicle?       @relation(fields: [vehicleId], references: [id])
+    incidents     Incident[]
+    starredRoutes StarredRoute[]
+    routeStops    RouteStop[]
 
     @@map("routes")
 }
 
+model Incident {
+    id          Int       @id @default(autoincrement())
+    title       String
+    description String
+    createdAt   DateTime  @default(now()) @map("created_at")
+    updatedAt   DateTime? @updatedAt @map("updated_at")
+    routeId     Int       @map("route_id")
+    route       Route     @relation(fields: [routeId], references: [id])
+
+    @@map("incidents")
+}
+
 model Stop {
-    id        Int      @id @default(autoincrement())
-    name      String
-    lat       Float
-    lng       Float
-    img       String?
-    createdAt DateTime @default(now()) @map("created_at")
+    id         Int         @id @default(autoincrement())
+    name       String
+    lat        Float
+    lng        Float
+    img        String?
+    createdAt  DateTime    @default(now()) @map("created_at")
+    routeStops RouteStop[]
+    routeId    Int?
 
     @@map("stops")
 }
@@ -81,30 +111,40 @@ model RouteStop {
     order     Int
     createdAt DateTime  @default(now()) @map("created_at")
     updatedAt DateTime? @updatedAt @map("updated_at")
+    route     Route     @relation(fields: [routeId], references: [id])
+    stop      Stop      @relation(fields: [stopId], references: [id])
 
     @@map("route_stops")
 }
 
 model Vehicle {
-    id        Int       @id @default(autoincrement())
-    name      String
-    plate     String    @unique
-    model     String?
-    color     String?
-    year      Int?
-    img       String?
-    createdAt DateTime  @default(now()) @map("created_at")
-    updatedAt DateTime? @updatedAt @map("updated_at")
+    id                 Int                 @id @default(autoincrement())
+    name               String
+    plate              String              @unique
+    model              String?
+    color              String?
+    year               Int?
+    img                String?
+    ownerId            Int                 @map("owner_id")
+    createdAt          DateTime            @default(now()) @map("created_at")
+    updatedAt          DateTime?           @updatedAt @map("updated_at")
+    ownerVehicleId     Int?                @map("owner_vehicle_id")
+    OwnerVehicle       OwnerVehicle?       @relation(fields: [ownerVehicleId], references: [id])
+    vehicleAssignments VehicleAssignment[]
+    ratings            Rating[]
+    routes             Route[]
+    vehicleLocations   VehicleLocation[]
 
     @@map("vehicles")
 }
 
 model VehicleLocation {
     id         Int      @id @default(autoincrement())
-    vehicleId  Int      @map("vehicle_id")
     lat        Float
     lng        Float
     recordedAt DateTime @default(now()) @map("recorded_at")
+    vehicleId  Int      @map("vehicle_id")
+    vehicle    Vehicle  @relation(fields: [vehicleId], references: [id])
 
     @@map("vehicle_locations")
 }
@@ -118,39 +158,50 @@ model VehicleAssignment {
     endTime   DateTime?
     createdAt DateTime  @default(now()) @map("created_at")
     updatedAt DateTime? @updatedAt @map("updated_at")
+    Vehicle   Vehicle   @relation(fields: [vehicleId], references: [id])
+    Driver    Driver    @relation(fields: [driverId], references: [id])
 
     @@map("vehicle_assignments")
 }
 
 model OwnerVehicle {
-    id         Int       @id @default(autoincrement())
-    userId     Int       @map("user_id")
-    vehicleId  Int       @map("vehicle_id")
-    createdAt  DateTime  @default(now()) @map("created_at")
-    updatedAt  DateTime? @updatedAt @map("updated_at")
-    isVerified Boolean   @default(false) @map("is_verified")
+    id            Int            @id @default(autoincrement())
+    userId        Int            @map("user_id")
+    vehicleId     Int            @map("vehicle_id")
+    createdAt     DateTime       @default(now()) @map("created_at")
+    updatedAt     DateTime?      @updatedAt @map("updated_at")
+    isVerified    Boolean        @default(false) @map("is_verified")
+    notifications Notification[]
+    vehicles      Vehicle[]
 
     @@map("owner_vehicles")
 }
 
 model Driver {
-    id         Int       @id @default(autoincrement())
-    userId     Int       @map("user_id")
-    createdAt  DateTime  @default(now()) @map("created_at")
-    updatedAt  DateTime? @updatedAt @map("updated_at")
-    isVerified Boolean   @default(false) @map("is_verified")
+    id                 Int                 @id @default(autoincrement())
+    userId             Int                 @map("user_id")
+    createdAt          DateTime            @default(now()) @map("created_at")
+    updatedAt          DateTime?           @updatedAt @map("updated_at")
+    isVerified         Boolean             @default(false) @map("is_verified")
+    notifications      Notification[]
+    vehicleAssignments VehicleAssignment[]
 
     @@map("drivers")
 }
 
 model Notification {
-    id        Int       @id @default(autoincrement())
-    userId    Int       @map("user_id")
-    title     String
-    message   String
-    isRead    Boolean   @default(false) @map("is_read")
-    createdAt DateTime  @default(now()) @map("created_at")
-    updatedAt DateTime? @updatedAt @map("updated_at")
+    id             Int           @id @default(autoincrement())
+    title          String
+    message        String
+    isRead         Boolean       @default(false) @map("is_read")
+    createdAt      DateTime      @default(now()) @map("created_at")
+    updatedAt      DateTime?     @updatedAt @map("updated_at")
+    driverId       Int?          @map("driver_id")
+    userId         Int           @map("user_id")
+    ownerVehicleId Int?          @map("owner_vehicle_id")
+    User           User?         @relation(fields: [userId], references: [id])
+    OwnerVehicle   OwnerVehicle? @relation(fields: [ownerVehicleId], references: [id])
+    Driver         Driver?       @relation(fields: [driverId], references: [id])
 
     @@map("notifications")
 }
