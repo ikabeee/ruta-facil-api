@@ -29,4 +29,7 @@ export class CreateUserDto {
     @IsBoolean({ message: 'El campo debe ser un booleano.' })
     @IsOptional()
     emailVerified?: boolean;
+    @IsDate({ message: 'La fecha de creación debe ser una fecha válida.' })
+    @IsNotEmpty({ message: 'La fecha de creación es obligatoria.' })
+    createdAt!: Date;
 }

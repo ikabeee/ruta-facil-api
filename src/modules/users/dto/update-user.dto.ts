@@ -50,4 +50,8 @@ export class UpdateUserDto {
     @IsBoolean({ message: 'El campo debe ser un booleano.' })
     emailVerified?: boolean;
 
+    @IsNotEmpty({ message: 'La fecha de actualización es obligatoria.' })
+    @IsDate({ message: 'La fecha de actualización debe ser una fecha válida.' })
+    updatedAt!: Date;
+
 }
