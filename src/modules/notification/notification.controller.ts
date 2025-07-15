@@ -468,4 +468,62 @@ export class NotificationController {
             return ApiResponse.error(res, error.message, 500);
         }
     }
+
+    /**
+     * @swagger
+     * /notifications/stats:
+     *   get:
+     *     summary: Obtener estadísticas de notificaciones
+     *     description: Obtiene estadísticas generales del sistema de notificaciones
+     *     tags: [Notifications]
+     *     security:
+     *       - bearerAuth: []
+     *     responses:
+     *       200:
+     *         description: Estadísticas obtenidas exitosamente
+     *         content:
+     *           application/json:
+     *             schema:
+     *               allOf:
+     *                 - $ref: '#/components/schemas/ApiResponse'
+     *                 - type: object
+     *                   properties:
+     *                     data:
+     *                       type: object
+     *                       properties:
+     *                         totalNotifications:
+     *                           type: integer
+     *                           description: Total de notificaciones
+     *                         unreadNotifications:
+     *                           type: integer
+     *                           description: Notificaciones no leídas
+     *                         readNotifications:
+     *                           type: integer
+     *                           description: Notificaciones leídas
+     *                         recentNotifications:
+     *                           type: integer
+     *                           description: Notificaciones recientes (últimos 30 días)
+     *                         readPercentage:
+     *                           type: integer
+     *                           description: Porcentaje de notificaciones leídas
+     *                         lastUpdated:
+     *                           type: string
+     *                           format: date-time
+     *                           description: Fecha de última actualización
+     *       401:
+     *         description: No autorizado
+     *       500:
+     *         description: Error interno del servidor
+     */
+    async getStats(req: Request, res: Response): Promise<Response> {
+        try {
+            const stats = await this.notificationService.getStats();
+            return ApiResponse.success(res, stats, 200);
+        } catch (error: any) {
+            if (error instanceof ApiError) {
+                return ApiResponse.error(res, error.message, error.statusCode);
+            }
+            return ApiResponse.error(res, error.message, 500);
+        }
+    }
 }

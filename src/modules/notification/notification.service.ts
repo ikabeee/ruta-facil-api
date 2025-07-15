@@ -40,4 +40,25 @@ export class NotificationService implements NotificationServiceInterface {
     async markAllAsReadByUserId(userId: number): Promise<void> {
         return this.notificationRepository.markAllAsReadByUserId(userId);
     }
+
+    async getStats(): Promise<{
+        total: number;
+        read: number;
+        unread: number;
+        recentNotifications: number; // Last 24 hours
+        byTimeRange: {
+            today: number;
+            thisWeek: number;
+            thisMonth: number;
+        };
+        topRecipients: Array<{
+            userId: number;
+            userName: string;
+            notificationCount: number;
+            unreadCount: number;
+        }>;
+        readRate: number; // Percentage of read notifications
+    }> {
+        return this.notificationRepository.getStats();
+    }
 }

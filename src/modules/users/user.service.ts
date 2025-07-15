@@ -32,7 +32,24 @@ export class UserService implements UserServiceInterface {
     async deleteUser(id: number): Promise<void> {
         return this.userRepository.deleteUser(id);
     }
+
     async comparePasswords(plainPassword: string, hashedPassword: string): Promise<boolean> {
+        // Implementation would be added here
         return this.userRepository.comparePasswords(plainPassword, hashedPassword);
+    }
+
+    async getStats(): Promise<{
+        total: number;
+        active: number;
+        pending: number;
+        byRole: {
+            admin: number;
+            user: number;
+            driver: number;
+        };
+        emailVerified: number;
+        recentUsers: number; // Last 30 days
+    }> {
+        return this.userRepository.getStats();
     }
 }

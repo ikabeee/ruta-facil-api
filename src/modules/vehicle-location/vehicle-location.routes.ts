@@ -10,6 +10,11 @@ const vehicleLocationService = new VehicleLocationService(vehicleLocationReposit
 const vehicleLocationController = new VehicleLocationController(vehicleLocationService);
 const router = express.Router();
 
+// Obtener estadísticas de ubicaciones de vehículos
+router.get('/stats', async (req: Request, res: Response) => { 
+    await vehicleLocationController.getStats(req, res); 
+});
+
 // Obtener todas las ubicaciones de vehículos
 router.get('/', async (req: Request, res: Response) => { 
     await vehicleLocationController.findAllVehicleLocations(req, res); 

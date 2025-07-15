@@ -11,4 +11,23 @@ export interface VehicleLocationServiceInterface {
     createVehicleLocation(vehicleLocationData: CreateVehicleLocationDto): Promise<VehicleLocation>;
     updateVehicleLocation(id: number, vehicleLocationData: UpdateVehicleLocationDto): Promise<VehicleLocation>;
     deleteVehicleLocation(id: number): Promise<void>;
+    getStats(): Promise<{
+        totalRecords: number;
+        uniqueVehicles: number;
+        recentRecords: number;
+        oldestRecord: Date | null;
+        latestRecord: Date | null;
+        byTimeRange: {
+            today: number;
+            thisWeek: number;
+            thisMonth: number;
+        };
+        mostActiveVehicles: Array<{
+            vehicleId: number;
+            vehicleName: string;
+            plate: string;
+            recordCount: number;
+            lastUpdate: Date;
+        }>;
+    }>;
 }

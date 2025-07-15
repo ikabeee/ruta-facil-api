@@ -409,4 +409,82 @@ export class VehicleLocationController {
             return ApiResponse.error(res, error.message, 500);
         }
     }
+
+    /**
+     * @openapi
+     * /api/v1/vehicle-locations/stats:
+     *   get:
+     *     tags: [Vehicle Locations]
+     *     summary: Obtener estadísticas de ubicaciones de vehículos
+     *     description: Devuelve estadísticas generales de las ubicaciones de vehículos
+     *     responses:
+     *       200:
+     *         description: Estadísticas obtenidas exitosamente
+     *         content:
+     *           application/json:
+     *             schema:
+     *               allOf:
+     *                 - $ref: '#/components/schemas/ApiResponse'
+     *                 - type: object
+     *                   properties:
+     *                     data:
+     *                       type: object
+     *                       properties:
+     *                         totalRecords:
+     *                           type: number
+     *                           description: Total de registros de ubicación
+     *                         uniqueVehicles:
+     *                           type: number
+     *                           description: Número de vehículos únicos
+     *                         recentRecords:
+     *                           type: number
+     *                           description: Registros en las últimas 24 horas
+     *                         oldestRecord:
+     *                           type: string
+     *                           format: date-time
+     *                           description: Fecha del registro más antiguo
+     *                         latestRecord:
+     *                           type: string
+     *                           format: date-time
+     *                           description: Fecha del registro más reciente
+     *                         byTimeRange:
+     *                           type: object
+     *                           properties:
+     *                             today:
+     *                               type: number
+     *                             thisWeek:
+     *                               type: number
+     *                             thisMonth:
+     *                               type: number
+     *                         mostActiveVehicles:
+     *                           type: array
+     *                           description: Top 5 vehículos más activos
+     *                           items:
+     *                             type: object
+     *                             properties:
+     *                               vehicleId:
+     *                                 type: number
+     *                               vehicleName:
+     *                                 type: string
+     *                               plate:
+     *                                 type: string
+     *                               recordCount:
+     *                                 type: number
+     *                               lastUpdate:
+     *                                 type: string
+     *                                 format: date-time
+     *       500:
+     *         $ref: '#/components/responses/InternalServerError'
+     */
+    async getStats(req: Request, res: Response): Promise<Response> {
+        try {
+            const stats = await this.vehicleLocationService.getStats();
+            return ApiResponse.success(res, stats);
+        } catch (error: any) {
+            if (error instanceof ApiError) {
+                return ApiResponse.error(res, error.message, error.statusCode);
+            }
+            return ApiResponse.error(res, 'Error interno del servidor', 500);
+        }
+    }
 }

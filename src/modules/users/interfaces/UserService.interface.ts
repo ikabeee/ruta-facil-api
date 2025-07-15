@@ -10,4 +10,16 @@ export interface UserServiceInterface {
     updateUser(id: number, userData: UpdateUserDto): Promise<User>;
     deleteUser(id: number): Promise<void>;
     comparePasswords(plainPassword: string, hashedPassword: string): Promise<boolean>;
+    getStats(): Promise<{
+        total: number;
+        active: number;
+        pending: number;
+        byRole: {
+            admin: number;
+            user: number;
+            driver: number;
+        };
+        emailVerified: number;
+        recentUsers: number;
+    }>;
 }

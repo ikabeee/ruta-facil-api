@@ -145,4 +145,72 @@ export class NotificationRepository implements NotificationRepositoryInterface {
             throw new ApiError(500, `Error al marcar todas las notificaciones como leídas para el usuario con id ${userId}`);
         }
     }
+
+    async getStats(): Promise<any> {
+        try {
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+            const [
+                totalNotifications,
+                unreadNotifications,
+                readNotifications,
+                recentNotifications,
+                notificationsByUser
+            ] = await Promise.all([
+                // Total de notificaciones
+                this.prisma.notification.count(),
+                
+                // Notificaciones no leídas
+                this.prisma.notification.count({
+                    where: { isRead: false }
+                }),
+                
+                // Notificaciones leídas
+                this.prisma.notification.count({
+                    where: { isRead: true }
+                }),
+                
+                // Notificaciones recientes (últimos 30 días)
+                this.prisma.notification.count({
+                    where: {
+                        createdAt: {
+                            gte: thirtyDaysAgo
+                        }
+                    }
+                }),
+                
+                // Notificaciones por usuario (top 5)
+                this.prisma.notification.groupBy({
+                    by: ['userId'],
+                    _count: {
+                        id: true
+                    },
+                    orderBy: {
+                        _count: {
+                            id: 'desc'
+                        }
+                    },
+                    take: 5
+                })
+            ]);
+
+            return {
+                totalNotifications,
+                unreadNotifications,
+                readNotifications,
+                recentNotifications,
+                notificationsByUser: notificationsByUser.map(item => ({
+                    userId: item.userId,
+                    count: item._count.id
+                })),
+                readPercentage: totalNotifications > 0 
+                    ? Math.round((readNotifications / totalNotifications) * 100) 
+                    : 0,
+                lastUpdated: new Date().toISOString()
+            };
+        } catch (error: any) {
+            throw new ApiError(500, 'Error al obtener estadísticas de notificaciones');
+        }
+    }
 }

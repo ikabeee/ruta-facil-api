@@ -107,4 +107,76 @@ export class RouteRepository implements RouteRepositoryInterface {
             throw new ApiError(500, `Error al eliminar la ruta con id ${id}`);
         }
     }
+
+    async getStats(): Promise<{
+        total: number;
+        active: number;
+        inactive: number;
+        averageDistance: number;
+        totalStops: number;
+        assignedUnits: number;
+        dailyTrips: number;
+        topRoutes: Array<{
+            id: number;
+            name: string;
+            code: string | null;
+            totalStops: number;
+            assignedUnits: number;
+        }>;
+    }> {
+        try {
+            const [
+                total,
+                active,
+                routes,
+                topRoutes
+            ] = await Promise.all([
+                this.prisma.route.count(),
+                this.prisma.route.count({ where: { status: 'ACTIVE' } }),
+                this.prisma.route.findMany({
+                    select: {
+                        distance: true,
+                        totalStops: true,
+                        assignedUnits: true,
+                        dailyTrips: true
+                    }
+                }),
+                this.prisma.route.findMany({
+                    select: {
+                        id: true,
+                        name: true,
+                        code: true,
+                        totalStops: true,
+                        assignedUnits: true
+                    },
+                    orderBy: [
+                        { assignedUnits: 'desc' },
+                        { totalStops: 'desc' }
+                    ],
+                    take: 5
+                })
+            ]);
+
+            const inactive = total - active;
+            const averageDistance = routes.length > 0 
+                ? routes.reduce((sum, route) => sum + (route.distance || 0), 0) / routes.length 
+                : 0;
+            const totalStops = routes.reduce((sum, route) => sum + route.totalStops, 0);
+            const assignedUnits = routes.reduce((sum, route) => sum + route.assignedUnits, 0);
+            const dailyTrips = routes.reduce((sum, route) => sum + route.dailyTrips, 0);
+
+            return {
+                total,
+                active,
+                inactive,
+                averageDistance: Math.round(averageDistance * 100) / 100,
+                totalStops,
+                assignedUnits,
+                dailyTrips,
+                topRoutes
+            };
+        } catch (error: any) {
+            throw new ApiError(500, `Error al obtener estadísticas de rutas: ${error.message}`);
+        }
+    }
 }

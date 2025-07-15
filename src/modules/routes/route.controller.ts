@@ -482,4 +482,76 @@ export class RouteController {
             return ApiResponse.error(res, error.message, 500);
         }
     }
+
+    /**
+     * @openapi
+     * /api/v1/routes/stats:
+     *   get:
+     *     tags: [Routes]
+     *     summary: Obtener estadísticas de rutas
+     *     description: Devuelve estadísticas generales de las rutas del sistema
+     *     responses:
+     *       200:
+     *         description: Estadísticas obtenidas exitosamente
+     *         content:
+     *           application/json:
+     *             schema:
+     *               allOf:
+     *                 - $ref: '#/components/schemas/ApiResponse'
+     *                 - type: object
+     *                   properties:
+     *                     data:
+     *                       type: object
+     *                       properties:
+     *                         total:
+     *                           type: number
+     *                           description: Total de rutas
+     *                         active:
+     *                           type: number
+     *                           description: Rutas activas
+     *                         inactive:
+     *                           type: number
+     *                           description: Rutas inactivas
+     *                         averageDistance:
+     *                           type: number
+     *                           description: Distancia promedio de las rutas
+     *                         totalStops:
+     *                           type: number
+     *                           description: Total de paradas en todas las rutas
+     *                         assignedUnits:
+     *                           type: number
+     *                           description: Unidades asignadas totales
+     *                         dailyTrips:
+     *                           type: number
+     *                           description: Viajes diarios totales
+     *                         topRoutes:
+     *                           type: array
+     *                           description: Top 5 rutas por unidades asignadas
+     *                           items:
+     *                             type: object
+     *                             properties:
+     *                               id:
+     *                                 type: number
+     *                               name:
+     *                                 type: string
+     *                               code:
+     *                                 type: string
+     *                               totalStops:
+     *                                 type: number
+     *                               assignedUnits:
+     *                                 type: number
+     *       500:
+     *         $ref: '#/components/responses/InternalServerError'
+     */
+    async getStats(req: Request, res: Response): Promise<Response> {
+        try {
+            const stats = await this.routeService.getStats();
+            return ApiResponse.success(res, stats);
+        } catch (error: any) {
+            if (error instanceof ApiError) {
+                return ApiResponse.error(res, error.message, error.statusCode);
+            }
+            return ApiResponse.error(res, 'Error interno del servidor', 500);
+        }
+    }
 }

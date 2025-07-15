@@ -517,4 +517,67 @@ export class UserController {
             return ApiResponse.error(res, error.message, 500);
         }
     }
+
+    /**
+     * @openapi
+     * /api/v1/users/stats:
+     *   get:
+     *     tags: [Users]
+     *     summary: Obtener estadísticas de usuarios
+     *     description: Devuelve estadísticas generales de los usuarios del sistema
+     *     security:
+     *       - cookieAuth: []
+     *     responses:
+     *       200:
+     *         description: Estadísticas obtenidas exitosamente
+     *         content:
+     *           application/json:
+     *             schema:
+     *               allOf:
+     *                 - $ref: '#/components/schemas/ApiResponse'
+     *                 - type: object
+     *                   properties:
+     *                     data:
+     *                       type: object
+     *                       properties:
+     *                         total:
+     *                           type: number
+     *                           description: Total de usuarios
+     *                         active:
+     *                           type: number
+     *                           description: Usuarios activos
+     *                         pending:
+     *                           type: number
+     *                           description: Usuarios pendientes
+     *                         byRole:
+     *                           type: object
+     *                           properties:
+     *                             admin:
+     *                               type: number
+     *                             user:
+     *                               type: number
+     *                             driver:
+     *                               type: number
+     *                         emailVerified:
+     *                           type: number
+     *                           description: Usuarios con email verificado
+     *                         recentUsers:
+     *                           type: number
+     *                           description: Usuarios registrados en los últimos 30 días
+     *       401:
+     *         $ref: '#/components/responses/Unauthorized'
+     *       500:
+     *         $ref: '#/components/responses/InternalServerError'
+     */
+    async getStats(req: Request, res: Response): Promise<Response> {
+        try {
+            const stats = await this.userService.getStats();
+            return ApiResponse.success(res, stats);
+        } catch (error: any) {
+            if (error instanceof ApiError) {
+                return ApiResponse.error(res, error.message, error.statusCode);
+            }
+            return ApiResponse.error(res, 'Error interno del servidor', 500);
+        }
+    }
 }

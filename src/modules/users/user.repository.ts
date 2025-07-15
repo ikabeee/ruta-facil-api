@@ -120,4 +120,57 @@ export class UserRepository implements UserRepositoryInterface {
     async comparePasswords(plainPassword: string, hashedPassword: string): Promise<boolean> {
         return bcrypt.compare(plainPassword, hashedPassword);
     }
+
+    async getStats(): Promise<{
+        total: number;
+        active: number;
+        pending: number;
+        byRole: {
+            admin: number;
+            user: number;
+            driver: number;
+        };
+        emailVerified: number;
+        recentUsers: number;
+    }> {
+        try {
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+            const [
+                total,
+                active,
+                pending,
+                adminCount,
+                userCount,
+                driverCount,
+                emailVerified,
+                recentUsers
+            ] = await Promise.all([
+                this.prisma.user.count(),
+                this.prisma.user.count({ where: { status: 'ACTIVE' } }),
+                this.prisma.user.count({ where: { status: 'PENDING' } }),
+                this.prisma.user.count({ where: { role: 'ADMIN' } }),
+                this.prisma.user.count({ where: { role: 'USER' } }),
+                this.prisma.user.count({ where: { role: 'DRIVER' } }),
+                this.prisma.user.count({ where: { emailVerified: true } }),
+                this.prisma.user.count({ where: { createdAt: { gte: thirtyDaysAgo } } })
+            ]);
+
+            return {
+                total,
+                active,
+                pending,
+                byRole: {
+                    admin: adminCount,
+                    user: userCount,
+                    driver: driverCount
+                },
+                emailVerified,
+                recentUsers
+            };
+        } catch (error: any) {
+            throw new ApiError(500, `Error al obtener estadísticas de usuarios: ${error.message}`);
+        }
+    }
 }
