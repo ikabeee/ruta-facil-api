@@ -17,7 +17,7 @@ export class CreateUserDto {
     @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres.' })
     @MaxLength(100, { message: 'La contraseña no puede exceder los 100 caracteres.' })
     password!: string;
-    @IsPhoneNumber()
+    @IsPhoneNumber('MX', { message: 'El número de teléfono no es válido para México' })
     @MaxLength(15, { message: 'El número de teléfono no puede exceder los 15 caracteres.' })
     phone?: string;
     @IsEnum(UserRole, { message: 'El rol debe ser uno de los valores permitidos: ADMIN, USER, DRIVER, OWNER_VEHICLE' })
@@ -29,7 +29,4 @@ export class CreateUserDto {
     @IsBoolean({ message: 'El campo debe ser un booleano.' })
     @IsOptional()
     emailVerified?: boolean;
-    @IsDate({ message: 'La fecha debe ser una fecha válida.' })
-    @IsNotEmpty({ message: 'La fecha de creación es obligatoria.' })
-    createdAt!: Date;
 }

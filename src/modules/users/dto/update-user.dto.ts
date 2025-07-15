@@ -34,7 +34,7 @@ export class UpdateUserDto {
     password?: string;
 
     @IsOptional()
-    @IsPhoneNumber()
+    @IsPhoneNumber('MX', { message: 'El número de teléfono no es válido para México' })
     @MaxLength(15, { message: 'El número de teléfono no puede exceder los 15 caracteres.' })
     phone?: string;
 
@@ -50,10 +50,4 @@ export class UpdateUserDto {
     @IsBoolean({ message: 'El campo debe ser un booleano.' })
     emailVerified?: boolean;
 
-    @IsOptional()
-    @IsDate({ message: 'La fecha de creación debe ser una fecha válida.' })
-    createdAt?: Date;
-
-    @IsNotEmpty({ message: 'La fecha de actualización es obligatoria.' })
-    updatedAt!: Date;
 }
