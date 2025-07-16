@@ -31,5 +31,5 @@ export class CreateUserDto {
     emailVerified?: boolean;
     @IsDate({ message: 'La fecha de verificación debe ser una fecha válida.' })
     @IsOptional()       
-    createAt!: Date;
+    createdAt!: Date;
 }
