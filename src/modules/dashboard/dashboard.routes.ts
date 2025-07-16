@@ -1,8 +1,12 @@
 import express, { Request, Response } from 'express';
 import { DashboardController } from './dashboard.controller';
+import { authMiddleware } from '../../shared/middleware/auth.middleware';
 
 const dashboardController = new DashboardController();
 const router = express.Router();
+
+// Aplicar middleware de autenticación a todas las rutas del dashboard
+router.use(authMiddleware);
 
 /**
  * @swagger
