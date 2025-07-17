@@ -21,6 +21,7 @@ import driverRoutes from './modules/driver/driver.routes';
 import notificationRoutes from './modules/notification/notification.routes';
 import dashboardRoutes from './modules/dashboard/dashboard.routes';
 import incidentsRoutes from './modules/incidents/incidents.routes';
+import scheduleRoutes from './modules/schedules/schedule.routes';
 import { authRoutes } from './modules/auth/auth.routes';
 import { setupSwagger } from './shared/config/swagger.config';
 
@@ -48,6 +49,7 @@ app.use('/api/v1/vehicle-assignments', vehicleAssignmentRoutes);
 app.use('/api/v1/owner-vehicles', ownerVehicleRoutes);
 app.use('/api/v1/drivers', driverRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/schedules', scheduleRoutes);
 /* */
 
 // Configurar Swagger
