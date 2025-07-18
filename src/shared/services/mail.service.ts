@@ -109,7 +109,7 @@ export class MailService implements IMailService {
      */
     public async sendEmailVerification(to: string, verificationToken: string): Promise<MailResult> {
         const subject = 'Verificación de Correo Electrónico - Ruta Fácil';
-        const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+        const verificationUrl = `${process.env.FRONTEND_URL}/auth/verify-email?token=${verificationToken}`;
         const html = EmailTemplates.emailVerificationTemplate(verificationUrl);
 
         return this.sendMail({
