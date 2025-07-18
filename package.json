@@ -7,7 +7,9 @@
     "dev:watch": "nodemon --watch src --exec ts-node src/index.ts",
     "start": "ts-node src/index.ts",
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "seed": "ts-node src/shared/seed/seed.ts",
+    "db:seed": "npx prisma db seed"
   },
   "keywords": [],
   "author": "",
@@ -41,5 +43,8 @@
     "nodemailer": "^7.0.4",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
+  },
+  "prisma": {
+    "seed": "ts-node src/shared/seed/seed.ts"
   }
 }
