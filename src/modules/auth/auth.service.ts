@@ -102,11 +102,11 @@ export class AuthService implements AuthServiceInterface {
                 lastName: data.lastName || '',
                 email: data.email,
                 password: data.password, // UserRepository se encarga del hash
-                phone: data.phone,
-                role: data.role,
+                phone: data.phone || '',
+                role: data.role || UserRole.USER, // Por defecto USER
                 status: UserStatus.PENDING, // Usuario pendiente hasta verificar email
-                emailVerified: false,
-                createdAt: new Date()
+                emailVerified: false, // Por defecto false
+                createdAt: new Date() // Fecha actual
             });
 
             // Generar token de verificación de email

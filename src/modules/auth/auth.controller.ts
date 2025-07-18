@@ -224,10 +224,23 @@ export class AuthController {
             const errors = await validate(registerDto);
 
             if (errors.length > 0) {
-                const errorMessages = errors.map(error => 
-                    Object.values(error.constraints || {}).join(', ')
-                ).join(', ');
-                return ApiResponse.error(res, errorMessages, 400);
+                // Crear un objeto con errores por campo
+                const fieldErrors: { [key: string]: string[] } = {};
+                
+                errors.forEach(error => {
+                    if (error.property && error.constraints) {
+                        fieldErrors[error.property] = Object.values(error.constraints);
+                    }
+                });
+
+                // Retornar una respuesta personalizada con errores de campo
+                return res.status(400).json({
+                    success: false,
+                    timestamp: new Date().toISOString(),
+                    statusCode: 400,
+                    message: 'Errores de validación',
+                    fieldErrors: fieldErrors
+                });
             }
 
             // Registrar usuario
