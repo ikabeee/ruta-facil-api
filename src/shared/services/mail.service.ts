@@ -74,7 +74,7 @@ export class MailService implements IMailService {
      */
     public async sendPasswordResetEmail(to: string, resetToken: string): Promise<MailResult> {
         const subject = 'Restablecimiento de Contraseña - Ruta Fácil';
-        const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+        const resetUrl = `${process.env.FRONTEND_URL}/auth/forgot-password/reset-password?token=${resetToken}`;
         const html = EmailTemplates.passwordResetTemplate(resetUrl);
 
         return this.sendMail({
