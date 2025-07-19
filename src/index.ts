@@ -3,6 +3,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
+import passport from 'passport';
 /* Archivos de configuración */
 dotenv.config();
 import { corsConfig } from './shared/config/corsConfig';
@@ -31,6 +32,7 @@ const app = express();
 app.use(cors(corsConfig));
 app.use(morgan('dev'));
 app.use(express.json());
+app.use(passport.initialize());
 /* */
 
 /* Rutas */

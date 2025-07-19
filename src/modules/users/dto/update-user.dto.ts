@@ -50,6 +50,18 @@ export class UpdateUserDto {
     @IsBoolean({ message: 'El campo debe ser un booleano.' })
     emailVerified?: boolean;
 
+    @IsOptional()
+    @IsString({ message: 'El proveedor de autenticación debe ser una cadena de texto.' })
+    authProvider?: string;
+    
+    @IsOptional()
+    @IsString({ message: 'El ID del proveedor debe ser una cadena de texto.' })
+    providerId?: string;
+    
+    @IsOptional()
+    @IsString({ message: 'La URL de la imagen de perfil debe ser una cadena de texto.' })
+    profilePicture?: string;
+
     @IsNotEmpty({ message: 'La fecha de actualización es obligatoria.' })
     @IsDate({ message: 'La fecha de actualización debe ser una fecha válida.' })
     updatedAt!: Date;

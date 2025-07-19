@@ -6,12 +6,19 @@ import { ApiResponse } from '../helpers/ApiResponse';
 import { JwtPayload } from '../../modules/auth/interfaces/Auth.interface';
 import { UserRole } from '../../../generated/prisma';
 
-// Extender la interfaz Request para incluir el usuario
+// Extender la interfaz Request para incluir el usuario autenticado
 declare global {
     namespace Express {
         interface Request {
             user?: JwtPayload;
         }
+    }
+}
+
+// También necesitamos extender el tipo User de Passport para OAuth
+declare global {
+    namespace Express {
+        interface User extends JwtPayload {}
     }
 }
 

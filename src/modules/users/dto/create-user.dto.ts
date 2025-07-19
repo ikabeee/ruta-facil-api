@@ -29,6 +29,19 @@ export class CreateUserDto {
     @IsBoolean({ message: 'El campo debe ser un booleano.' })
     @IsOptional()
     emailVerified?: boolean;
+    
+    @IsString({ message: 'El proveedor de autenticación debe ser una cadena de texto.' })
+    @IsOptional()
+    authProvider?: string;
+    
+    @IsString({ message: 'El ID del proveedor debe ser una cadena de texto.' })
+    @IsOptional()
+    providerId?: string;
+    
+    @IsString({ message: 'La URL de la imagen de perfil debe ser una cadena de texto.' })
+    @IsOptional()
+    profilePicture?: string;
+    
     @IsDate({ message: 'La fecha de creación debe ser una fecha válida.' })
     @IsNotEmpty({ message: 'La fecha de creación es obligatoria.' })
     createdAt!: Date;

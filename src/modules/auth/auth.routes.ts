@@ -1,6 +1,11 @@
 import { Router } from 'express';
+import passport from 'passport';
 import { AuthController } from './auth.controller';
 import { authMiddleware, optionalAuthMiddleware } from '../../shared/middleware/auth.middleware';
+import { GoogleOAuthStrategy } from '../../shared/strategies/google-oauth.strategy';
+
+// Inicializar la estrategia de Google
+new GoogleOAuthStrategy();
 
 const router = Router();
 const authController = new AuthController();
@@ -29,6 +34,16 @@ router.post('/verify-email', async (req, res) => {
 router.post('/resend-verification', async (req, res) => {
     await authController.resendVerification(req, res);
 });
+
+// Rutas OAuth - Google
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+router.get('/google/callback', 
+    passport.authenticate('google', { session: false }), 
+    async (req, res) => {
+        await authController.googleCallback(req, res);
+    }
+);
 
 // Rutas protegidas (requieren autenticación)
 router.get('/me', authMiddleware, async (req, res) => {

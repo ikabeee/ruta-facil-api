@@ -965,4 +965,65 @@ export class AuthController {
             return ApiResponse.error(res, 'Usuario no autenticado', 401);
         }
     }
+
+    /**
+     * @swagger
+     * /auth/google:
+     *   get:
+     *     summary: Iniciar autenticación con Google
+     *     description: Redirige al usuario a Google para autenticación OAuth
+     *     tags: [Auth]
+     *     responses:
+     *       302:
+     *         description: Redirección a Google OAuth
+     */
+    public async googleAuth(req: Request, res: Response): Promise<void> {
+        // Este método será manejado por Passport
+    }
+
+    /**
+     * @swagger
+     * /auth/google/callback:
+     *   get:
+     *     summary: Callback de Google OAuth
+     *     description: Procesa la respuesta de Google OAuth y autentica al usuario
+     *     tags: [Auth]
+     *     responses:
+     *       302:
+     *         description: Redirección al frontend con token
+     *       400:
+     *         description: Error en la autenticación de Google
+     */
+    public async googleCallback(req: Request, res: Response): Promise<void> {
+        try {
+            const userData = req.user as any;
+
+            if (!userData) {
+                return res.redirect(`${process.env.FRONTEND_URL}/auth/login?error=google_auth_failed`);
+            }
+
+            // Importar OAuthService aquí para evitar dependencias circulares
+            const { OAuthService } = await import('../../shared/services/oauth.service');
+            const oauthService = new OAuthService();
+
+            const authResult = await oauthService.handleOAuthUser(userData);
+
+            // Configurar cookies
+            const userSession: UserSession = {
+                id: authResult.user.id,
+                email: authResult.user.email,
+                role: authResult.user.role,
+                name: authResult.user.name
+            };
+
+            CookieHelper.setAuthCookie(res, authResult.token, userSession);
+
+            // Redirigir al frontend con el token
+            return res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${authResult.token}`);
+
+        } catch (error) {
+            console.error('Google OAuth error:', error);
+            return res.redirect(`${process.env.FRONTEND_URL}/auth/login?error=google_auth_error`);
+        }
+    }
 }
