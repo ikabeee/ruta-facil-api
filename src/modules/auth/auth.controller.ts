@@ -999,6 +999,13 @@ export class AuthController {
             const userData = req.user as any;
 
             if (!userData) {
+                console.error('Google OAuth: No se recibieron datos del usuario');
+                return res.redirect(`${process.env.FRONTEND_URL}/auth/login?error=google_auth_failed`);
+            }
+
+            // Validar que tenemos los datos necesarios
+            if (!userData.email || !userData.providerId) {
+                console.error('Google OAuth: Datos de usuario incompletos', userData);
                 return res.redirect(`${process.env.FRONTEND_URL}/auth/login?error=google_auth_failed`);
             }
 
@@ -1018,11 +1025,21 @@ export class AuthController {
 
             CookieHelper.setAuthCookie(res, authResult.token, userSession);
 
+            // Log exitoso
+            console.log(`Google OAuth exitoso para usuario: ${authResult.user.email}`);
+
             // Redirigir al frontend con el token
             return res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${authResult.token}`);
 
         } catch (error) {
             console.error('Google OAuth error:', error);
+            
+            // Si es un error de ApiError, redirigir con error específico
+            if (error instanceof ApiError) {
+                const errorParam = error.statusCode === 403 ? 'account_disabled' : 'google_auth_error';
+                return res.redirect(`${process.env.FRONTEND_URL}/auth/login?error=${errorParam}`);
+            }
+            
             return res.redirect(`${process.env.FRONTEND_URL}/auth/login?error=google_auth_error`);
         }
     }

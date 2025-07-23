@@ -36,7 +36,10 @@ app.use(passport.initialize());
 /* */
 
 /* Rutas */
+console.log('🔗 Registrando rutas de autenticación...');
 app.use('/api/v1/auth', authRoutes);
+console.log('✅ Rutas de auth registradas en /api/v1/auth');
+
 app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/incidents', incidentsRoutes);
 app.use('/api/v1/users', userRoutes);
@@ -57,10 +60,27 @@ app.use('/api/v1/schedules', scheduleRoutes);
 // Configurar Swagger
 setupSwagger(app);
 
+// Ruta de debug para verificar que el servidor esté funcionando
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'OK',
+        message: 'Servidor funcionando correctamente',
+        timestamp: new Date().toISOString(),
+        routes: {
+            auth: '/api/v1/auth',
+            googleOAuth: '/api/v1/auth/google',
+            googleCallback: '/api/v1/auth/google/callback'
+        }
+    });
+});
+
 dotenv.config();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 7000; // Cambiado a 7000 para coincidir con el frontend
 
 app.listen(PORT, () => {
-    console.log(`El servidor está corriendo en el puerto: ${PORT}`);
-    console.log(`Documentación Swagger disponible en: http://localhost:${PORT}/api-docs`);
+    console.log(`🚀 El servidor está corriendo en el puerto: ${PORT}`);
+    console.log(`📚 Documentación Swagger disponible en: http://localhost:${PORT}/api-docs`);
+    console.log(`🔍 Health check disponible en: http://localhost:${PORT}/health`);
+    console.log(`🔐 Google OAuth disponible en: http://localhost:${PORT}/api/v1/auth/google`);
+    console.log(`🌐 Frontend URL configurada: ${process.env.FRONTEND_URL}`);
 });

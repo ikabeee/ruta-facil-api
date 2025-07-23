@@ -5,7 +5,9 @@ import { authMiddleware, optionalAuthMiddleware } from '../../shared/middleware/
 import { GoogleOAuthStrategy } from '../../shared/strategies/google-oauth.strategy';
 
 // Inicializar la estrategia de Google
+console.log('🔧 Inicializando Google OAuth Strategy...');
 new GoogleOAuthStrategy();
+console.log('✅ Google OAuth Strategy inicializada');
 
 const router = Router();
 const authController = new AuthController();
@@ -36,10 +38,24 @@ router.post('/resend-verification', async (req, res) => {
 });
 
 // Rutas OAuth - Google
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+console.log('🔗 Registrando ruta GET /google para OAuth...');
+router.get('/google', (req, res, next) => {
+    console.log('🚀 Iniciando autenticación con Google...');
+    passport.authenticate('google', { 
+        scope: ['profile', 'email'],
+        prompt: 'select_account' // Permite al usuario seleccionar cuenta
+    })(req, res, next);
+});
 
+console.log('🔗 Registrando ruta GET /google/callback para OAuth...');
 router.get('/google/callback', 
-    passport.authenticate('google', { session: false }), 
+    (req, res, next) => {
+        console.log('📥 Callback de Google OAuth recibido');
+        passport.authenticate('google', { 
+            session: false,
+            failureRedirect: `${process.env.FRONTEND_URL}/auth/login?error=google_auth_failed`
+        })(req, res, next);
+    }, 
     async (req, res) => {
         await authController.googleCallback(req, res);
     }
@@ -65,5 +81,8 @@ router.post('/logout', optionalAuthMiddleware, async (req, res) => {
 router.get('/check', authMiddleware, async (req, res) => {
     await authController.checkAuth(req, res);
 });
+
+console.log('✅ Todas las rutas de autenticación registradas correctamente');
+console.log('📋 Rutas disponibles: /login, /register, /google, /google/callback, /logout, /check');
 
 export { router as authRoutes };

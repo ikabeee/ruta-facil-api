@@ -27,13 +27,24 @@ export class GoogleOAuthStrategy implements OAuthStrategyInterface {
     async validateUser(profile: Profile): Promise<OAuthUserData> {
         const { id, name, emails, photos } = profile;
         
+        // Validar datos obligatorios
         if (!emails || !emails.length) {
             throw new Error('No email found in Google profile');
         }
 
+        if (!id) {
+            throw new Error('No ID found in Google profile');
+        }
+
+        // Validar email
+        const email = emails[0].value;
+        if (!email || !email.includes('@')) {
+            throw new Error('Invalid email in Google profile');
+        }
+
         return {
-            email: emails[0].value,
-            firstName: name?.givenName || '',
+            email: email,
+            firstName: name?.givenName || email.split('@')[0], // Fallback al username del email
             lastName: name?.familyName || '',
             picture: photos?.[0]?.value,
             provider: 'google',

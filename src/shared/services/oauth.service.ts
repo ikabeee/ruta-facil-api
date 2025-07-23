@@ -22,15 +22,22 @@ export class OAuthService implements OAuthServiceInterface {
 
     async handleOAuthUser(userData: OAuthUserData): Promise<{ user: User; token: string; expiresIn: number }> {
         try {
+            // Validar datos de entrada
+            if (!userData.email || !userData.firstName || !userData.providerId) {
+                throw new ApiError(400, 'Datos de OAuth incompletos');
+            }
+
             // Buscar usuario existente por email
             let user = await this.findUserByEmail(userData.email);
 
             if (!user) {
                 // Crear nuevo usuario si no existe
                 user = await this.createOAuthUser(userData);
+                console.log(`Nuevo usuario OAuth creado: ${user.email} con proveedor ${userData.provider}`);
             } else {
                 // Actualizar información del usuario si es necesario
                 user = await this.updateUserOAuthInfo(user, userData);
+                console.log(`Usuario OAuth existente actualizado: ${user.email}`);
             }
 
             // Verificar que el usuario esté activo
@@ -57,7 +64,7 @@ export class OAuthService implements OAuthServiceInterface {
                 throw error;
             }
             console.error('Error handling OAuth user:', error);
-            throw new ApiError(500, 'Error interno del servidor');
+            throw new ApiError(500, 'Error interno del servidor durante autenticación OAuth');
         }
     }
 
@@ -66,14 +73,18 @@ export class OAuthService implements OAuthServiceInterface {
     }
 
     private async createOAuthUser(userData: OAuthUserData): Promise<User> {
+        // Para usuarios OAuth, generamos una contraseña aleatoria que nunca será usada
+        // ya que siempre se autenticarán a través del proveedor OAuth
+        const randomPassword = this.generateRandomPassword();
+        
         const newUser = await this.userService.createUser({
             name: userData.firstName,
             lastName: userData.lastName,
             email: userData.email,
-            password: '', // OAuth users don't need a password
+            password: randomPassword, // Password temporal que nunca se usará
             phone: '',
             role: UserRole.USER,
-            status: UserStatus.ACTIVE,
+            status: UserStatus.ACTIVE, // Los usuarios OAuth son automáticamente activos
             emailVerified: true, // OAuth providers verify emails
             authProvider: userData.provider,
             providerId: userData.providerId,
@@ -82,6 +93,19 @@ export class OAuthService implements OAuthServiceInterface {
         });
 
         return newUser;
+    }
+
+    /**
+     * Genera una contraseña aleatoria para usuarios OAuth
+     * Esta contraseña nunca será usada ya que se autentican vía OAuth
+     */
+    private generateRandomPassword(): string {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+        let password = '';
+        for (let i = 0; i < 32; i++) {
+            password += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return password;
     }
 
     private async updateUserOAuthInfo(user: User, userData: OAuthUserData): Promise<User> {
