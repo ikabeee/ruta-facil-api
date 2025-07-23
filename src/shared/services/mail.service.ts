@@ -120,6 +120,24 @@ export class MailService implements IMailService {
     }
 
     /**
+     * Envía un correo con código OTP para autenticación
+     * @param to - Correo del destinatario
+     * @param otpCode - Código OTP de 6 dígitos
+     * @param userName - Nombre del usuario (opcional)
+     * @returns Promise<MailResult>
+     */
+    public async sendOTPCode(to: string, otpCode: string, userName?: string): Promise<MailResult> {
+        const subject = 'Código de Verificación OTP - Ruta Fácil';
+        const html = EmailTemplates.otpCodeTemplate(otpCode, userName);
+
+        return this.sendMail({
+            to,
+            subject,
+            html
+        });
+    }
+
+    /**
      * Envía múltiples correos en lote
      * @param emails - Array de opciones de correo
      * @returns Promise<MailResult[]>

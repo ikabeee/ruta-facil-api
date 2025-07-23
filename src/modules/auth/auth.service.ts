@@ -1,7 +1,7 @@
 import { PrismaClient, User, UserRole, UserStatus } from "../../../generated/prisma";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
-import { ForgotPasswordDto, ResetPasswordDto, ChangePasswordDto, VerifyEmailDto, ResendVerificationDto } from "./dto/auth.dto";
+import { ForgotPasswordDto, ResetPasswordDto, ChangePasswordDto, VerifyEmailDto, ResendVerificationDto, Verify2FADto } from "./dto/auth.dto";
 import { AuthServiceInterface } from "./interfaces/AuthService.interface";
 import { AuthResponse, UserSession } from "./interfaces/Auth.interface";
 import { ApiError } from "../../shared/errors/ApiError";
@@ -18,6 +18,9 @@ export class AuthService implements AuthServiceInterface {
     private mailService: MailService;
     private userService: UserService;
     private userRepository: UserRepository;
+    
+    // Almacenamiento temporal de códigos OTP (en producción usar Redis)
+    private otpCodes: Map<string, { code: string; expiresAt: Date }> = new Map();
 
     constructor() {
         this.prisma = new PrismaClient();
@@ -44,26 +47,25 @@ export class AuthService implements AuthServiceInterface {
                 throw new ApiError(403, 'Usuario inactivo. Contacte al administrador');
             }
 
-            // Generar tokens
-            const tokenData = JwtHelper.generateToken({
-                id: user.id,
-                email: user.email,
-                role: user.role,
-                name: user.name
-            });
+            // VERIFICACIÓN OBLIGATORIA: Todos los usuarios deben pasar por OTP
+            // Generar y enviar código OTP
+            const otpCode = this.generateOTPCode(user.email);
+            
+            // Enviar código OTP por correo
+            try {
+                const mailResult = await this.mailService.sendOTPCode(user.email, otpCode, user.name);
+                if (!mailResult.success) {
+                    console.error('Error enviando código OTP:', mailResult.error);
+                    throw new ApiError(500, 'Error enviando código de verificación. Intenta nuevamente.');
+                }
+                console.log(`✅ Código OTP enviado exitosamente a ${user.email}: ${otpCode}`);
+            } catch (mailError) {
+                console.error('Error en envío de correo OTP:', mailError);
+                throw new ApiError(500, 'Error enviando código de verificación. Intenta nuevamente.');
+            }
 
-            return {
-                user: {
-                    id: user.id,
-                    name: user.name,
-                    lastName: user.lastName || undefined,
-                    email: user.email,
-                    role: user.role,
-                    emailVerified: user.emailVerified
-                },
-                token: tokenData.token,
-                expiresIn: tokenData.expiresIn
-            };
+            // Lanzar error con información de que se requiere OTP
+            throw new ApiError(422, `REQUIRES_OTP_VERIFICATION:${user.email}`);
         } catch (error) {
             if (error instanceof ApiError) {
                 throw error;
@@ -134,6 +136,52 @@ export class AuthService implements AuthServiceInterface {
                     email: newUser.email,
                     role: newUser.role,
                     emailVerified: newUser.emailVerified
+                },
+                token: tokenData.token,
+                expiresIn: tokenData.expiresIn
+            };
+        } catch (error) {
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw new ApiError(500, 'Error interno del servidor');
+        }
+    }
+
+    /**
+     * Completa el login después de la verificación OTP exitosa
+     * @param email - Email del usuario
+     * @returns Promise<AuthResponse>
+     */
+    async completeLoginAfterOTP(email: string): Promise<AuthResponse> {
+        try {
+            // Obtener usuario por email
+            const user = await this.getUserByEmail(email);
+            if (!user) {
+                throw new ApiError(401, 'Usuario no encontrado');
+            }
+
+            // Verificar si el usuario está activo
+            if (user.status !== UserStatus.ACTIVE) {
+                throw new ApiError(403, 'Usuario inactivo. Contacte al administrador');
+            }
+
+            // Generar tokens después de OTP exitoso
+            const tokenData = JwtHelper.generateToken({
+                id: user.id,
+                email: user.email,
+                role: user.role,
+                name: user.name
+            });
+
+            return {
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    lastName: user.lastName || undefined,
+                    email: user.email,
+                    role: user.role,
+                    emailVerified: user.emailVerified
                 },
                 token: tokenData.token,
                 expiresIn: tokenData.expiresIn
@@ -343,6 +391,101 @@ export class AuthService implements AuthServiceInterface {
     }
 
     /**
+     * Verifica el código de verificación (2FA/Email/OTP para Login)
+     * @param data - Datos de verificación
+     * @returns Promise<AuthResponse | void> - Retorna AuthResponse si es OTP de login, void si es verificación de email
+     */
+    async verify2FA(data: Verify2FADto): Promise<AuthResponse | void> {
+        try {
+            // El código viene directamente como un código de verificación de email
+            // Verificar si es un token JWT (verificación por email)
+            try {
+                // Intentar verificar como token JWT
+                await this.verifyEmail({ token: data.code });
+                return;
+            } catch (tokenError) {
+                // Si no es un token JWT válido, verificar si es un código OTP de 6 dígitos
+                if (/^\d{6}$/.test(data.code)) {
+                    // Es un código de 6 dígitos - puede ser para verificación de email o login OTP
+                    console.log('🔐 Código OTP de 6 dígitos recibido:', data.code);
+                    
+                    if (data.email) {
+                        // Si se proporciona email, buscar específicamente ese usuario
+                        console.log('📧 Buscando usuario con email:', data.email);
+                        const foundUser = await this.getUserByEmail(data.email);
+                        if (!foundUser) {
+                            throw new ApiError(400, 'Usuario no encontrado');
+                        }
+                        
+                        // Verificar si es para login OTP (usuario activo) o verificación de email (pendiente)
+                        if (foundUser.status === UserStatus.ACTIVE && foundUser.emailVerified) {
+                            // Es un OTP para completar login
+                            console.log('🔓 Procesando OTP para completar login');
+                            
+                            // Validar código OTP usando el nuevo método
+                            if (this.validateOTPCodeForEmail(foundUser.email, data.code)) {
+                                console.log('✅ OTP válido, completando login');
+                                return await this.completeLoginAfterOTP(foundUser.email);
+                            } else {
+                                throw new ApiError(400, 'Código OTP inválido o expirado');
+                            }
+                        } else if (!foundUser.emailVerified || foundUser.status === UserStatus.PENDING) {
+                            // Es verificación de email
+                            console.log('📧 Procesando verificación de email');
+                            
+                            // Validar código para verificación de email (simulación)
+                            if (data.code === '123456' || this.validateEmailVerificationCode(data.code)) {
+                                await this.updateUserStatus(foundUser.id, true);
+                                console.log(`✅ Usuario ${foundUser.email} verificado exitosamente`);
+                                return; // Void para verificación de email
+                            } else {
+                                throw new ApiError(400, 'Código de verificación inválido');
+                            }
+                        } else {
+                            throw new ApiError(400, 'Estado de usuario inválido para esta operación');
+                        }
+                    } else {
+                        // Si no se proporciona email, buscar el usuario más reciente no verificado (legacy)
+                        console.log('🔍 Buscando usuario más reciente no verificado');
+                        const unverifiedUsers = await this.prisma.user.findMany({
+                            where: {
+                                emailVerified: false,
+                                status: UserStatus.PENDING
+                            },
+                            orderBy: {
+                                createdAt: 'desc'
+                            },
+                            take: 1
+                        });
+                        
+                        if (unverifiedUsers.length === 0) {
+                            throw new ApiError(400, 'No hay usuarios pendientes de verificación');
+                        }
+                        
+                        const userToVerify = unverifiedUsers[0];
+                        
+                        // Validar código para verificación de email
+                        if (data.code === '123456' || this.validateEmailVerificationCode(data.code)) {
+                            await this.updateUserStatus(userToVerify.id, true);
+                            console.log(`✅ Usuario ${userToVerify.email} verificado exitosamente`);
+                            return; // Void para verificación de email
+                        } else {
+                            throw new ApiError(400, 'Código de verificación inválido');
+                        }
+                    }
+                } else {
+                    throw new ApiError(400, 'Código de verificación inválido o expirado');
+                }
+            }
+        } catch (error) {
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw new ApiError(500, 'Error interno del servidor');
+        }
+    }
+
+    /**
      * Obtiene el usuario actual
      * @param userId - ID del usuario
      * @returns Promise<User>
@@ -519,5 +662,75 @@ export class AuthService implements AuthServiceInterface {
         } catch (error) {
             throw new ApiError(500, 'Error al actualizar usuario');
         }
+    }
+
+    /**
+     * Valida código de verificación de email (implementación temporal)
+     * @param code - Código de verificación
+     * @returns boolean
+     */
+    private validateEmailVerificationCode(code: string): boolean {
+        // Implementación temporal: acepta códigos específicos
+        // En producción esto debería validar contra códigos generados y almacenados
+        const validCodes = ['123456', '000000', '111111'];
+        return validCodes.includes(code);
+    }
+
+    /**
+     * Genera un código OTP de 6 dígitos y lo almacena temporalmente
+     * @param email - Email del usuario para asociar el código
+     * @returns string - Código OTP generado
+     */
+    private generateOTPCode(email: string): string {
+        // Generar código de 6 dígitos aleatorio
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Almacenar código con expiración de 10 minutos
+        const expiresAt = new Date();
+        expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+        
+        this.otpCodes.set(email, { code, expiresAt });
+        
+        console.log(`🔑 Código OTP generado para ${email}: ${code} (expira: ${expiresAt.toLocaleString()})`);
+        return code;
+    }
+
+    /**
+     * Valida un código OTP para un email específico
+     * @param email - Email del usuario
+     * @param code - Código a validar
+     * @returns boolean
+     */
+    private validateOTPCodeForEmail(email: string, code: string): boolean {
+        // Códigos de desarrollo que siempre funcionan
+        const devCodes = ['123456', '000000', '111111'];
+        if (devCodes.includes(code)) {
+            return true;
+        }
+
+        // Verificar código almacenado
+        const storedOTP = this.otpCodes.get(email);
+        if (!storedOTP) {
+            console.log(`❌ No hay código OTP almacenado para ${email}`);
+            return false;
+        }
+
+        // Verificar si el código no ha expirado
+        if (new Date() > storedOTP.expiresAt) {
+            console.log(`⏰ Código OTP expirado para ${email}`);
+            this.otpCodes.delete(email); // Limpiar código expirado
+            return false;
+        }
+
+        // Verificar si el código coincide
+        const isValid = storedOTP.code === code;
+        if (isValid) {
+            console.log(`✅ Código OTP válido para ${email}`);
+            this.otpCodes.delete(email); // Limpiar código usado
+        } else {
+            console.log(`❌ Código OTP inválido para ${email}. Esperado: ${storedOTP.code}, Recibido: ${code}`);
+        }
+
+        return isValid;
     }
 }

@@ -37,6 +37,10 @@ router.post('/resend-verification', async (req, res) => {
     await authController.resendVerification(req, res);
 });
 
+router.post('/verify-2fa', async (req, res) => {
+    await authController.verify2FA(req, res);
+});
+
 // Rutas OAuth - Google
 console.log('🔗 Registrando ruta GET /google para OAuth...');
 router.get('/google', (req, res, next) => {
@@ -83,6 +87,6 @@ router.get('/check', authMiddleware, async (req, res) => {
 });
 
 console.log('✅ Todas las rutas de autenticación registradas correctamente');
-console.log('📋 Rutas disponibles: /login, /register, /google, /google/callback, /logout, /check');
+console.log('📋 Rutas disponibles: /login, /register, /verify-email, /resend-verification, /verify-2fa, /google, /google/callback, /logout, /check');
 
 export { router as authRoutes };

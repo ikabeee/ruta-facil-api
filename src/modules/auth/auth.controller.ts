@@ -4,7 +4,7 @@ import { plainToClass } from 'class-transformer';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { ForgotPasswordDto, ResetPasswordDto, ChangePasswordDto, VerifyEmailDto, ResendVerificationDto } from './dto/auth.dto';
+import { ForgotPasswordDto, ResetPasswordDto, ChangePasswordDto, VerifyEmailDto, ResendVerificationDto, Verify2FADto } from './dto/auth.dto';
 import { ApiResponse } from '../../shared/helpers/ApiResponse';
 import { ApiError } from '../../shared/errors/ApiError';
 import { CookieHelper } from '../../shared/helpers/CookieHelper';
@@ -126,6 +126,32 @@ export class AuthController {
 
         } catch (error) {
             if (error instanceof ApiError) {
+                // Manejo especial para email no verificado (legacy)
+                if (error.message.startsWith('EMAIL_NOT_VERIFIED:')) {
+                    const email = error.message.split(':')[1];
+                    return res.status(error.statusCode).json({
+                        success: false,
+                        timestamp: new Date().toISOString(),
+                        statusCode: error.statusCode,
+                        message: 'Debes verificar tu correo electrónico antes de iniciar sesión',
+                        requiresEmailVerification: true,
+                        email: email
+                    });
+                }
+                
+                // Manejo para requerir OTP de login
+                if (error.message.startsWith('REQUIRES_OTP_VERIFICATION:')) {
+                    const email = error.message.split(':')[1];
+                    return res.status(error.statusCode).json({
+                        success: false,
+                        timestamp: new Date().toISOString(),
+                        statusCode: error.statusCode,
+                        message: 'Debes completar la verificación OTP para acceder',
+                        requiresOTPVerification: true,
+                        email: email
+                    });
+                }
+                
                 return ApiResponse.error(res, error.message, error.statusCode);
             }
             return ApiResponse.error(res, 'Error interno del servidor', 500);
@@ -676,6 +702,101 @@ export class AuthController {
             return ApiResponse.success(res, {
                 message: 'Correo de verificación enviado'
             });
+
+        } catch (error) {
+            if (error instanceof ApiError) {
+                return ApiResponse.error(res, error.message, error.statusCode);
+            }
+            return ApiResponse.error(res, 'Error interno del servidor', 500);
+        }
+    }
+
+    /**
+     * @swagger
+     * /auth/verify-2fa:
+     *   post:
+     *     summary: Verificar código 2FA/Email
+     *     description: Verifica el código de verificación para 2FA o email
+     *     tags: [Auth]
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - code
+     *             properties:
+     *               code:
+     *                 type: string
+     *                 description: Código de verificación de 6 dígitos
+     *                 example: "123456"
+     *     responses:
+     *       200:
+     *         description: Código verificado exitosamente
+     *         content:
+     *           application/json:
+     *             schema:
+     *               allOf:
+     *                 - $ref: '#/components/schemas/ApiResponse'
+     *                 - type: object
+     *                   properties:
+     *                     data:
+     *                       type: object
+     *                       properties:
+     *                         message:
+     *                           type: string
+     *                           example: "Código verificado exitosamente"
+     *       400:
+     *         description: Código inválido
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     *       500:
+     *         description: Error interno del servidor
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     */
+    public async verify2FA(req: Request, res: Response): Promise<Response> {
+        try {
+            // Validar datos de entrada
+            const verify2FADto = plainToClass(Verify2FADto, req.body);
+            const errors = await validate(verify2FADto);
+
+            if (errors.length > 0) {
+                const errorMessages = errors.map(error => 
+                    Object.values(error.constraints || {}).join(', ')
+                ).join(', ');
+                return ApiResponse.error(res, errorMessages, 400);
+            }
+
+            // Verificar código 2FA
+            const result = await this.authService.verify2FA(verify2FADto);
+
+            // Si el resultado contiene tokens, es un login completado
+            if (result && 'token' in result) {
+                // Es un login OTP completado, establecer cookie y retornar datos de usuario
+                res.cookie('auth_token', result.token, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: 'lax',
+                    maxAge: result.expiresIn * 1000
+                });
+
+                return ApiResponse.success(res, {
+                    user: result.user,
+                    expiresIn: result.expiresIn,
+                    message: 'Login completado exitosamente'
+                });
+            } else {
+                // Es verificación de email sin login
+                return ApiResponse.success(res, {
+                    message: 'Código verificado exitosamente'
+                });
+            }
 
         } catch (error) {
             if (error instanceof ApiError) {

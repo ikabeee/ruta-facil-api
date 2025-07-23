@@ -37,7 +37,7 @@ async function main() {
         {
           name: 'Carlos',
           lastName: 'González',
-          email: 'admin@rutafacil.com',
+          email: 'carlglz30@gmail.com',
           password: hashedPassword,
           phone: '+52 55 1234 5678',
           role: UserRole.ADMIN,
@@ -60,7 +60,7 @@ async function main() {
         {
           name: 'Miguel',
           lastName: 'Rodríguez',
-          email: 'miguel.owner@rutafacil.com',
+          email: 'middle606@gmail.com',
           password: hashedPassword,
           phone: '+52 55 3456 7890',
           role: UserRole.OWNER_VEHICLE,

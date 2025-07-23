@@ -160,4 +160,36 @@ export class EmailTemplates {
         
         return this.baseTemplate(content);
     }
+
+    /**
+     * Plantilla para código OTP de autenticación
+     */
+    public static otpCodeTemplate(otpCode: string, userName?: string): string {
+        const content = `
+            <h2>Código de Verificación OTP</h2>
+            ${userName ? `<p>Hola ${userName},</p>` : ''}
+            
+            <p>Has solicitado acceder a tu cuenta en Ruta Fácil. Para completar el proceso de autenticación, utiliza el siguiente código de verificación:</p>
+            
+            <div style="background-color: white; padding: 30px; border-radius: 10px; margin: 30px 0; text-align: center; border: 2px solid #3498db;">
+                <h1 style="color: #3498db; font-size: 48px; margin: 0; letter-spacing: 8px; font-family: 'Courier New', monospace;">${otpCode}</h1>
+                <p style="color: #7f8c8d; margin-top: 15px; font-size: 14px;">Código de verificación</p>
+            </div>
+            
+            <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <strong>⚠️ Importante:</strong>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>Este código expira en <strong>10 minutos</strong></li>
+                    <li>No compartas este código con nadie</li>
+                    <li>Si no solicitaste este código, ignora este correo</li>
+                </ul>
+            </div>
+            
+            <p style="color: #7f8c8d; font-size: 14px;">
+                Si tienes problemas para acceder a tu cuenta, contacta a nuestro equipo de soporte.
+            </p>
+        `;
+        
+        return this.baseTemplate(content);
+    }
 }

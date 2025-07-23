@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength } from "class-validator";
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from "class-validator";
 
 export class ForgotPasswordDto {
     @IsNotEmpty({ message: "El email es obligatorio" })
@@ -46,4 +46,14 @@ export class ResendVerificationDto {
     @IsNotEmpty({ message: "El email es obligatorio" })
     @IsEmail({}, { message: "El email debe ser válido" })
     email!: string;
+}
+
+export class Verify2FADto {
+    @IsNotEmpty({ message: "El código de verificación es obligatorio" })
+    @IsString({ message: "El código debe ser una cadena de texto" })
+    code!: string;
+
+    @IsOptional()
+    @IsEmail({}, { message: "El email debe ser válido" })
+    email?: string;
 }
