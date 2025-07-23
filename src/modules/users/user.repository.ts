@@ -83,7 +83,8 @@ export class UserRepository implements UserRepositoryInterface {
                 where: { id },
                 data: {
                     ...userData,
-                    ...(userData.password && { password: await bcrypt.hash(userData.password, 10) })
+                    ...(userData.password && { password: await bcrypt.hash(userData.password, 10) }),
+                    updatedAt: userData.updatedAt || new Date() // Generar automáticamente si no se proporciona
                 }
             });
             return userUpdated;
@@ -132,6 +133,7 @@ export class UserRepository implements UserRepositoryInterface {
         };
         emailVerified: number;
         recentUsers: number;
+        lastUpdated: string;
     }> {
         try {
             const thirtyDaysAgo = new Date();
@@ -167,7 +169,8 @@ export class UserRepository implements UserRepositoryInterface {
                     driver: driverCount
                 },
                 emailVerified,
-                recentUsers
+                recentUsers,
+                lastUpdated: new Date().toISOString()
             };
         } catch (error: any) {
             throw new ApiError(500, `Error al obtener estadísticas de usuarios: ${error.message}`);

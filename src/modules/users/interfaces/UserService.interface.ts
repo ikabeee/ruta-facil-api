@@ -21,5 +21,6 @@ export interface UserServiceInterface {
         };
         emailVerified: number;
         recentUsers: number;
+        lastUpdated: string;
     }>;
 }

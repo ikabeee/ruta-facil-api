@@ -29,18 +29,35 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     try {
         let token: string | null = null;
 
+        // Logging temporal para debug
+        console.log('🔍 [AUTH] Verificando autenticación para:', req.method, req.path);
+        console.log('🔍 [AUTH] Headers Authorization:', req.headers.authorization ? 'Presente' : 'Ausente');
+        
+        // Verificar si req.cookies existe antes de usar Object.keys
+        const cookies = req.cookies || {};
+        console.log('🔍 [AUTH] Cookies recibidas:', Object.keys(cookies).length > 0 ? Object.keys(cookies) : 'Sin cookies');
+        console.log('🔍 [AUTH] Cookie ruta-facil-auth:', cookies['ruta-facil-auth'] ? 'Presente' : 'Ausente');
+        console.log('🔍 [AUTH] Cookie user-session:', cookies['user-session'] ? 'Presente' : 'Ausente');
+
         // Intentar obtener token del header Authorization
         const authHeader = req.headers.authorization;
         if (authHeader && authHeader.startsWith('Bearer ')) {
             token = JwtHelper.extractTokenFromHeader(authHeader);
+            console.log('✅ [AUTH] Token encontrado en header');
         }
 
         // Si no hay token en header, intentar obtenerlo de las cookies
         if (!token) {
-            token = CookieHelper.getTokenFromCookies(req.cookies);
+            token = CookieHelper.getTokenFromCookies(cookies);
+            if (token) {
+                console.log('✅ [AUTH] Token encontrado en cookies');
+            } else {
+                console.log('❌ [AUTH] No se encontró token en cookies');
+            }
         }
 
         if (!token) {
+            console.log('❌ [AUTH] No hay token de autenticación disponible');
             ApiResponse.error(res, 'Token de autenticación requerido', 401);
             return;
         }
@@ -48,9 +65,11 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
         // Verificar token
         const payload = JwtHelper.verifyToken(token);
         req.user = payload;
+        console.log('✅ [AUTH] Usuario autenticado:', payload.email, 'Rol:', payload.role);
 
         next();
     } catch (error) {
+        console.error('❌ [AUTH] Error en autenticación:', error);
         if (error instanceof ApiError) {
             ApiResponse.error(res, error.message, error.statusCode);
             return;

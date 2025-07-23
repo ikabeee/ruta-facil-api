@@ -49,6 +49,7 @@ export class UserService implements UserServiceInterface {
         };
         emailVerified: number;
         recentUsers: number; // Last 30 days
+        lastUpdated: string;
     }> {
         return this.userRepository.getStats();
     }

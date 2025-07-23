@@ -778,13 +778,15 @@ export class AuthController {
 
             // Si el resultado contiene tokens, es un login completado
             if (result && 'token' in result) {
-                // Es un login OTP completado, establecer cookie y retornar datos de usuario
-                res.cookie('auth_token', result.token, {
-                    httpOnly: true,
-                    secure: process.env.NODE_ENV === 'production',
-                    sameSite: 'lax',
-                    maxAge: result.expiresIn * 1000
-                });
+                // Es un login OTP completado, establecer cookie usando CookieHelper
+                const userSession: UserSession = {
+                    id: result.user.id,
+                    email: result.user.email,
+                    role: result.user.role,
+                    name: result.user.name
+                };
+
+                CookieHelper.setAuthCookie(res, result.token, userSession);
 
                 return ApiResponse.success(res, {
                     user: result.user,

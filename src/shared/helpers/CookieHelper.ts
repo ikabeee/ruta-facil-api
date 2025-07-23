@@ -5,11 +5,11 @@ export class CookieHelper {
     private static readonly COOKIE_NAME = 'ruta-facil-auth';
     private static readonly COOKIE_OPTIONS = {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax' as const,
+        secure: false, // Siempre false en desarrollo para localhost
+        sameSite: 'lax' as const, // Usar lax en lugar de none para desarrollo local
         maxAge: 24 * 60 * 60 * 1000, // 24 horas en milisegundos
         path: '/',
-        domain: process.env.NODE_ENV === 'development' ? undefined : process.env.COOKIE_DOMAIN
+        domain: undefined // No especificar dominio en desarrollo
     };
 
     /**
@@ -19,8 +19,14 @@ export class CookieHelper {
      * @param userSession - Datos de sesión del usuario
      */
     public static setAuthCookie(res: Response, token: string, userSession: UserSession): void {
+        console.log('🍪 [COOKIE] Estableciendo cookies de autenticación');
+        console.log('🍪 [COOKIE] Token length:', token.length);
+        console.log('🍪 [COOKIE] User session:', userSession);
+        console.log('🍪 [COOKIE] Cookie options:', this.COOKIE_OPTIONS);
+        
         // Cookie con el token JWT
         res.cookie(this.COOKIE_NAME, token, this.COOKIE_OPTIONS);
+        console.log('🍪 [COOKIE] Cookie JWT establecida:', this.COOKIE_NAME);
         
         // Cookie adicional con datos de sesión (no sensibles)
         res.cookie('user-session', JSON.stringify({
@@ -33,6 +39,7 @@ export class CookieHelper {
             httpOnly: false, // Permitir acceso desde el frontend
             maxAge: this.COOKIE_OPTIONS.maxAge
         });
+        console.log('🍪 [COOKIE] Cookie de sesión establecida: user-session');
     }
 
     /**

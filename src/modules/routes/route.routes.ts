@@ -3,12 +3,16 @@ import { RouteController } from './route.controller';
 import { RouteService } from './route.service';
 import { RouteRepository } from './route.repository';
 import { PrismaClient } from '../../../generated/prisma';
+import { authMiddleware } from '../../shared/middleware/auth.middleware';
 
 const prisma = new PrismaClient();
 const routeRepository = new RouteRepository(prisma);
 const routeService = new RouteService(routeRepository);
 const routeController = new RouteController(routeService);
 const router = express.Router();
+
+// Aplicar middleware de autenticación a todas las rutas
+router.use(authMiddleware);
 
 router.get('/stats', async (req: Request, res: Response) => { await routeController.getStats(req, res); });
 router.get('/', async (req: Request, res: Response) => { await routeController.findAllRoutes(req, res); });

@@ -22,6 +22,7 @@ export interface UserRepositoryInterface {
         };
         emailVerified: number;
         recentUsers: number;
+        lastUpdated: string;
     }>;
 
 }

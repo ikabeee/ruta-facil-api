@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
 import passport from 'passport';
+import cookieParser from 'cookie-parser';
 /* Archivos de configuración */
 dotenv.config();
 import { corsConfig } from './shared/config/corsConfig';
@@ -32,6 +33,7 @@ const app = express();
 app.use(cors(corsConfig));
 app.use(morgan('dev'));
 app.use(express.json());
+app.use(cookieParser()); // Middleware para parsear cookies
 app.use(passport.initialize());
 /* */
 
