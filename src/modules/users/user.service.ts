@@ -1,6 +1,7 @@
 import { User } from "../../../generated/prisma";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { UpdateDriverProfileDto, UpdateOwnerProfileDto } from "./dto/update-profiles.dto";
 import { UserRepositoryInterface } from "./interfaces/UserRepository.interface";
 import { UserServiceInterface } from "./interfaces/UserService.interface";
 
@@ -19,6 +20,16 @@ export class UserService implements UserServiceInterface {
 
     async findUserByEmail(email: string): Promise<User> {
         return this.userRepository.findByEmail(email);
+    }
+
+    // Nuevo método para obtener usuarios por rol
+    async findUsersByRole(role: string): Promise<User[]> {
+        return this.userRepository.findByRole(role);
+    }
+
+    // Nuevo método para obtener usuarios disponibles para ser conductores
+    async findAvailableDriverUsers(): Promise<User[]> {
+        return this.userRepository.findAvailableDriverUsers();
     }
 
     async createUser(userData: CreateUserDto): Promise<User> {
@@ -52,5 +63,33 @@ export class UserService implements UserServiceInterface {
         lastUpdated: string;
     }> {
         return this.userRepository.getStats();
+    }
+
+    // Nuevos métodos para manejar perfiles específicos
+    async updateDriverProfile(userId: number, driverData: UpdateDriverProfileDto): Promise<User> {
+        // Convertir al usuario a DRIVER si no lo es ya
+        const updateData: any = {
+            ...driverData,
+            role: 'DRIVER'
+        };
+        return this.userRepository.updateUser(userId, updateData);
+    }
+
+    async updateOwnerProfile(userId: number, ownerData: UpdateOwnerProfileDto): Promise<User> {
+        // Convertir al usuario a OWNER_VEHICLE si no lo es ya
+        const updateData: any = {
+            ...ownerData,
+            role: 'OWNER_VEHICLE'
+        };
+        return this.userRepository.updateUser(userId, updateData);
+    }
+
+    // Métodos para obtener estadísticas específicas
+    async getDriverUsers(): Promise<User[]> {
+        return this.userRepository.findByRole('DRIVER');
+    }
+
+    async getOwnerUsers(): Promise<User[]> {
+        return this.userRepository.findByRole('OWNER_VEHICLE');
     }
 }

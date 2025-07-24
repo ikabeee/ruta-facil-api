@@ -33,9 +33,10 @@ export class DashboardService implements DashboardServiceInterface {
                 recentIncidents
             ] = await Promise.all([
                 this.prisma.user.count(),
-                this.prisma.driver.count({
+                this.prisma.user.count({
                     where: {
-                        isVerified: true
+                        role: 'DRIVER',
+                        isDriverVerified: true
                     }
                 }),
                 this.prisma.route.count(),
@@ -264,14 +265,18 @@ export class DashboardService implements DashboardServiceInterface {
      */
     async getEfficiencySummary(): Promise<EfficiencyData> {
         try {
-            const driversEfficiency = await this.prisma.driver.findMany({
+            const driversEfficiency = await this.prisma.user.findMany({
+                where: {
+                    role: 'DRIVER' as const
+                },
                 select: {
                     id: true,
-                    rating: true,
+                    name: true,
+                    driverRating: true,
                     totalTrips: true,
                     vehicleAssignments: {
                         include: {
-                            Vehicle: {
+                            vehicle: {
                                 select: {
                                     name: true,
                                     plate: true
@@ -283,9 +288,6 @@ export class DashboardService implements DashboardServiceInterface {
                             createdAt: 'desc'
                         }
                     }
-                },
-                where: {
-                    isVerified: true
                 }
             });
 
@@ -302,13 +304,13 @@ export class DashboardService implements DashboardServiceInterface {
                 }
             });
 
-            const driversData = driversEfficiency.map(driver => ({
+            const driversData = driversEfficiency.map((driver: any) => ({
                 id: driver.id,
-                name: `Conductor ${driver.id}`,
-                efficiency: Math.min(100, Math.round((driver.rating || 0) * 20)),
-                totalTrips: driver.totalTrips,
-                color: (driver.rating && driver.rating >= 4 ? 'green' : 
-                       driver.rating && driver.rating >= 3 ? 'yellow' : 'red') as 'green' | 'yellow' | 'red'
+                name: driver.name || `Conductor ${driver.id}`,
+                efficiency: Math.min(100, Math.round((driver.driverRating || 0) * 20)),
+                totalTrips: driver.totalTrips || 0,
+                color: (driver.driverRating && driver.driverRating >= 4 ? 'green' : 
+                       driver.driverRating && driver.driverRating >= 3 ? 'yellow' : 'red') as 'green' | 'yellow' | 'red'
             }));
 
             const routesData = routesEfficiency.map(route => ({
@@ -323,8 +325,8 @@ export class DashboardService implements DashboardServiceInterface {
             return {
                 drivers: driversData,
                 routes: routesData,
-                averageDriverEfficiency: driversData.reduce((acc, d) => acc + d.efficiency, 0) / Math.max(1, driversData.length),
-                averageRouteEfficiency: routesData.reduce((acc, r) => acc + r.efficiency, 0) / Math.max(1, routesData.length)
+                averageDriverEfficiency: driversData.reduce((acc: number, d: any) => acc + d.efficiency, 0) / Math.max(1, driversData.length),
+                averageRouteEfficiency: routesData.reduce((acc: number, r: any) => acc + r.efficiency, 0) / Math.max(1, routesData.length)
             };
         } catch (error) {
             console.error('Error getting efficiency summary:', error);

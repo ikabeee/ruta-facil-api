@@ -122,6 +122,47 @@ export class UserRepository implements UserRepositoryInterface {
         return bcrypt.compare(plainPassword, hashedPassword);
     }
 
+    // Nuevo método para obtener usuarios por rol
+    async findByRole(role: string): Promise<User[]> {
+        try {
+            const users = await this.prisma.user.findMany({
+                where: { 
+                    role: role as any,
+                    status: 'ACTIVE' // Solo usuarios activos
+                },
+                orderBy: { name: 'asc' }
+            });
+            return users;
+        } catch (error: any) {
+            throw new ApiError(500, `Error al buscar usuarios por rol ${role}: ${error.message}`);
+        }
+    }
+
+    // Nuevo método para obtener usuarios disponibles para ser conductores
+    async findAvailableDriverUsers(): Promise<User[]> {
+        try {
+            // Buscar usuarios que:
+            // 1. Tengan rol DRIVER o USER (se puede convertir a driver)
+            // 2. Estén activos
+            // 3. No tengan ya configuración de conductor (license, etc.)
+            const users = await this.prisma.user.findMany({
+                where: {
+                    OR: [
+                        { role: 'DRIVER' },
+                        { role: 'USER' }
+                    ],
+                    status: 'ACTIVE',
+                    // Si license es null, significa que no ha sido configurado como conductor
+                    license: null
+                },
+                orderBy: { name: 'asc' }
+            });
+            return users;
+        } catch (error: any) {
+            throw new ApiError(500, `Error al buscar usuarios disponibles para conductores: ${error.message}`);
+        }
+    }
+
     async getStats(): Promise<{
         total: number;
         active: number;

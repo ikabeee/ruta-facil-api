@@ -29,11 +29,33 @@ model User {
     authProvider  String?        @map("auth_provider") // 'local', 'google', 'facebook', etc.
     providerId    String?        @map("provider_id")   // ID del proveedor OAuth
     profilePicture String?       @map("profile_picture") // URL de la imagen de perfil
-    createdAt     DateTime       @default(now()) @map("created_at")
-    updatedAt     DateTime?      @updatedAt @map("updated_at")
-    notifications Notification[]
-    starredRoutes StarredRoute[]
-    ratings       Rating[]
+    
+    // Campos para conductores (cuando role = DRIVER)
+    license            String?    @map("driver_license")
+    licenseExpiration  DateTime?  @map("driver_license_expiration")
+    driverExperience   String?    @map("driver_experience")
+    driverRating       Float?     @default(4.0) @map("driver_rating")
+    totalTrips         Int        @default(0) @map("driver_total_trips")
+    isDriverVerified   Boolean    @default(false) @map("is_driver_verified")
+    
+    // Campos para propietarios de vehículos (cuando role = OWNER_VEHICLE)
+    company           String?    @map("owner_company")
+    contact           String?    @map("owner_contact")
+    rfc               String?    @map("owner_rfc")
+    address           String?    @map("owner_address")
+    totalVehicles     Int        @default(0) @map("owner_total_vehicles")
+    lastPayment       DateTime?  @map("owner_last_payment")
+    isOwnerVerified   Boolean    @default(false) @map("is_owner_verified")
+    
+    createdAt          DateTime   @default(now()) @map("created_at")
+    updatedAt          DateTime?  @updatedAt @map("updated_at")
+    
+    // Relaciones
+    notifications      Notification[]
+    starredRoutes      StarredRoute[]
+    ratings            Rating[]
+    vehicles           Vehicle[]      // Un usuario puede tener varios vehículos
+    vehicleAssignments VehicleAssignment[] // Asignaciones como conductor
 
     @@map("users")
 }
@@ -76,28 +98,29 @@ model Rating {
 }
 
 model Route {
-    id            Int            @id @default(autoincrement())
-    code          String?        @unique
-    name          String
-    img           String?
-    firstPoint    String         @map("first_point")
-    lastPoint     String         @map("last_point")
-    description   String?
-    distance      Float?
-    estimatedTime Int?           @map("estimated_time")
-    totalStops    Int            @default(0) @map("total_stops")
-    assignedUnits Int            @default(0) @map("assigned_units")
-    dailyTrips    Int            @default(0) @map("daily_trips")
-    operatingHours String?       @map("operating_hours")
-    status        RouteStatus    @default(ACTIVE)
-    createdAt     DateTime       @default(now()) @map("created_at")
-    updatedAt     DateTime?      @updatedAt @map("updated_at")
-    vehicleId     Int?           @map("vehicle_id")
-    vehicle       Vehicle?       @relation(fields: [vehicleId], references: [id])
-    incidents     Incident[]
-    starredRoutes StarredRoute[]
-    routeStops    RouteStop[]
-    schedules     Schedule[]
+    id                 Int                 @id @default(autoincrement())
+    code               String?             @unique
+    name               String
+    img                String?
+    firstPoint         String              @map("first_point")
+    lastPoint          String              @map("last_point")
+    description        String?
+    distance           Float?
+    estimatedTime      Int?                @map("estimated_time")
+    totalStops         Int                 @default(0) @map("total_stops")
+    assignedUnits      Int                 @default(0) @map("assigned_units")
+    dailyTrips         Int                 @default(0) @map("daily_trips")
+    operatingHours     String?             @map("operating_hours")
+    status             RouteStatus         @default(ACTIVE)
+    createdAt          DateTime            @default(now()) @map("created_at")
+    updatedAt          DateTime?           @updatedAt @map("updated_at")
+    vehicleId          Int?                @map("vehicle_id")
+    vehicle            Vehicle?            @relation(fields: [vehicleId], references: [id])
+    incidents          Incident[]
+    starredRoutes      StarredRoute[]
+    routeStops         RouteStop[]
+    schedules          Schedule[]
+    vehicleAssignments VehicleAssignment[]
 
     @@map("routes")
 }
@@ -165,8 +188,9 @@ model Vehicle {
     ownerId            Int                 @map("owner_id")
     createdAt          DateTime            @default(now()) @map("created_at")
     updatedAt          DateTime?           @updatedAt @map("updated_at")
-    ownerVehicleId     Int?                @map("owner_vehicle_id")
-    OwnerVehicle       OwnerVehicle?       @relation(fields: [ownerVehicleId], references: [id])
+    
+    // Relación directa con User (propietario)
+    owner              User                @relation(fields: [ownerId], references: [id])
     vehicleAssignments VehicleAssignment[]
     ratings            Rating[]
     routes             Route[]
@@ -195,60 +219,22 @@ model VehicleAssignment {
     endTime   DateTime?
     createdAt DateTime  @default(now()) @map("created_at")
     updatedAt DateTime? @updatedAt @map("updated_at")
-    Vehicle   Vehicle   @relation(fields: [vehicleId], references: [id])
-    Driver    Driver    @relation(fields: [driverId], references: [id])
+    vehicle   Vehicle   @relation(fields: [vehicleId], references: [id])
+    route     Route     @relation(fields: [routeId], references: [id])
+    driver    User      @relation(fields: [driverId], references: [id])
 
     @@map("vehicle_assignments")
 }
 
-model OwnerVehicle {
-    id            Int            @id @default(autoincrement())
-    userId        Int            @map("user_id")
-    company       String?
-    contact       String?
-    rfc           String?
-    address       String?
-    totalVehicles Int            @default(0) @map("total_vehicles")
-    lastPayment   DateTime?      @map("last_payment")
-    createdAt     DateTime       @default(now()) @map("created_at")
-    updatedAt     DateTime?      @updatedAt @map("updated_at")
-    isVerified    Boolean        @default(false) @map("is_verified")
-    notifications Notification[]
-    vehicles      Vehicle[]
-
-    @@map("owner_vehicles")
-}
-
-model Driver {
-    id                 Int                 @id @default(autoincrement())
-    userId             Int                 @map("user_id")
-    license            String?
-    licenseExpiration  DateTime?           @map("license_expiration")
-    experience         String?
-    rating             Float?              @default(0)
-    totalTrips         Int                 @default(0) @map("total_trips")
-    createdAt          DateTime            @default(now()) @map("created_at")
-    updatedAt          DateTime?           @updatedAt @map("updated_at")
-    isVerified         Boolean             @default(false) @map("is_verified")
-    notifications      Notification[]
-    vehicleAssignments VehicleAssignment[]
-
-    @@map("drivers")
-}
-
 model Notification {
-    id             Int           @id @default(autoincrement())
-    title          String
-    message        String
-    isRead         Boolean       @default(false) @map("is_read")
-    createdAt      DateTime      @default(now()) @map("created_at")
-    updatedAt      DateTime?     @updatedAt @map("updated_at")
-    driverId       Int?          @map("driver_id")
-    userId         Int           @map("user_id")
-    ownerVehicleId Int?          @map("owner_vehicle_id")
-    User           User?         @relation(fields: [userId], references: [id])
-    OwnerVehicle   OwnerVehicle? @relation(fields: [ownerVehicleId], references: [id])
-    Driver         Driver?       @relation(fields: [driverId], references: [id])
+    id        Int       @id @default(autoincrement())
+    title     String
+    message   String
+    isRead    Boolean   @default(false) @map("is_read")
+    createdAt DateTime  @default(now()) @map("created_at")
+    updatedAt DateTime? @updatedAt @map("updated_at")
+    userId    Int       @map("user_id")
+    user      User      @relation(fields: [userId], references: [id])
 
     @@map("notifications")
 }

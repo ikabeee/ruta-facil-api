@@ -17,4 +17,18 @@ export class ValidateParams {
         }
         return null;
     }
+
+    /**
+     * Valida y convierte un parámetro a un ID válido.
+     * @param param Valor a validar.
+     * @returns {number} ID válido.
+     * @throws {Error} Si el parámetro no es válido.
+     */
+    static validateId(param: any): number {
+        const error = this.validatePositiveInteger(param);
+        if (error) {
+            throw new Error(error);
+        }
+        return parseInt(param, 10);
+    }
 }

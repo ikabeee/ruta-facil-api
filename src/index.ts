@@ -18,8 +18,6 @@ import routeStopRoutes from './modules/route-stop/route-stop.routes';
 import vehicleRoutes from './modules/vehicle/vehicle.routes';
 import vehicleLocationRoutes from './modules/vehicle-location/vehicle-location.routes';
 import vehicleAssignmentRoutes from './modules/vehicle-assigment/vehicle-assigment.routes';
-import ownerVehicleRoutes from './modules/owner-vehicle/owner-vehicle.routes';
-import driverRoutes from './modules/driver/driver.routes';
 import notificationRoutes from './modules/notification/notification.routes';
 import dashboardRoutes from './modules/dashboard/dashboard.routes';
 import incidentsRoutes from './modules/incidents/incidents.routes';
@@ -53,8 +51,6 @@ app.use('/api/v1/route-stops', routeStopRoutes);
 app.use('/api/v1/vehicles', vehicleRoutes);
 app.use('/api/v1/vehicle-locations', vehicleLocationRoutes);
 app.use('/api/v1/vehicle-assignments', vehicleAssignmentRoutes);
-app.use('/api/v1/owner-vehicles', ownerVehicleRoutes);
-app.use('/api/v1/drivers', driverRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/schedules', scheduleRoutes);
 /* */

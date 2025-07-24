@@ -9,6 +9,9 @@
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
     "seed": "ts-node src/shared/seed/seed.ts",
+    "seed:enhanced": "ts-node prisma/seed-enhanced.ts",
+    "seed:drivers": "ts-node src/shared/seed/enhanced-seed.ts",
+    "seed:verify": "ts-node src/shared/seed/verify-relations.ts",
     "db:seed": "npx prisma db seed"
   },
   "keywords": [],
