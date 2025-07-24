@@ -10,14 +10,95 @@ export class VehicleRepository implements VehicleRepositoryInterface {
     ) { }
 
     async findAll(): Promise<Vehicle[]> {
-        const vehicles = await this.prisma.vehicle.findMany();
+        const vehicles = await this.prisma.vehicle.findMany({
+            include: {
+                owner: {
+                    select: {
+                        id: true,
+                        name: true,
+                        lastName: true,
+                        email: true,
+                        phone: true,
+                        company: true,
+                        contact: true,
+                        rfc: true,
+                        address: true,
+                        isOwnerVerified: true
+                    }
+                },
+                vehicleAssignments: {
+                    include: {
+                        driver: {
+                            select: {
+                                id: true,
+                                name: true,
+                                lastName: true,
+                                email: true,
+                                phone: true,
+                                license: true,
+                                driverRating: true,
+                                totalTrips: true,
+                                isDriverVerified: true
+                            }
+                        },
+                        route: {
+                            select: {
+                                id: true,
+                                name: true,
+                                code: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
         return vehicles;
     }
 
     async findById(id: number): Promise<Vehicle> {
         try {
             const vehicle = await this.prisma.vehicle.findUnique({
-                where: { id }
+                where: { id },
+                include: {
+                    owner: {
+                        select: {
+                            id: true,
+                            name: true,
+                            lastName: true,
+                            email: true,
+                            phone: true,
+                            company: true,
+                            contact: true,
+                            rfc: true,
+                            address: true,
+                            isOwnerVerified: true
+                        }
+                    },
+                    vehicleAssignments: {
+                        include: {
+                            driver: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                    lastName: true,
+                                    email: true,
+                                    phone: true,
+                                    license: true,
+                                    driverRating: true,
+                                    totalTrips: true,
+                                    isDriverVerified: true
+                                }
+                            },
+                            route: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                    code: true
+                                }
+                            }
+                        }
+                    }
+                }
             });
             if (!vehicle) {
                 throw new ApiError(404, `Vehículo con id ${id} no encontrado.`);
