@@ -1,8 +1,10 @@
 import { PrismaClient } from '../../../generated/prisma';
 import { CreateDriverDto } from './dto/create-driver.dto';
+import { CreateDriverWithUserDto } from './dto/create-driver-with-user.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
 import { Driver, DriverStats } from './interfaces/driver.interface';
 import { ApiError } from '../../shared/errors/ApiError';
+import * as bcrypt from 'bcrypt';
 
 export class DriverRepository {
     constructor(private readonly prisma: PrismaClient) {}
@@ -13,16 +15,9 @@ export class DriverRepository {
                 role: 'DRIVER'
             };
 
-            // Si se proporciona ownerId, filtrar por drivers asignados a vehículos de ese propietario
-            if (ownerId) {
-                whereClause.vehicleAssignments = {
-                    some: {
-                        vehicle: {
-                            ownerId: ownerId
-                        }
-                    }
-                };
-            }
+            // TEMPORALMENTE: Si se proporciona ownerId, mostrar todos los conductores
+            // TODO: Implementar relación directa entre conductor y propietario
+            console.log(`🔍 [DRIVER REPOSITORY] Buscando drivers para owner: ${ownerId || 'ALL'}`);
 
             const drivers = await this.prisma.user.findMany({
                 where: whereClause,
@@ -44,7 +39,7 @@ export class DriverRepository {
                     updatedAt: true
                 },
                 orderBy: {
-                    name: 'asc'
+                    createdAt: 'desc' // Mostrar los más recientes primero
                 }
             });
 
@@ -203,6 +198,87 @@ export class DriverRepository {
                 throw error;
             }
             throw new ApiError(500, 'Error al crear conductor');
+        }
+    }
+
+    /**
+     * Crear un nuevo conductor con datos de usuario completos
+     */
+    async createWithUserData(createDriverDto: any): Promise<Driver> {
+        try {
+            // Verificar que el email no esté ya en uso
+            const existingUser = await this.prisma.user.findUnique({
+                where: { email: createDriverDto.email }
+            });
+
+            if (existingUser) {
+                throw new ApiError(400, 'El email ya está registrado');
+            }
+
+            // Crear el nuevo usuario como conductor
+            const hashedPassword = await bcrypt.hash('DriverPass123!', 10); // Temporal password
+            
+            const newUser = await this.prisma.user.create({
+                data: {
+                    name: createDriverDto.name,
+                    lastName: createDriverDto.lastName,
+                    email: createDriverDto.email,
+                    password: hashedPassword,
+                    phone: createDriverDto.phone,
+                    role: 'DRIVER',
+                    profilePicture: createDriverDto.profilePicture,
+                    license: createDriverDto.license,
+                    licenseExpiration: createDriverDto.licenseExpiration ? new Date(createDriverDto.licenseExpiration) : null,
+                    driverExperience: createDriverDto.driverExperience,
+                    driverRating: createDriverDto.driverRating || 4.0,
+                    totalTrips: 0,
+                    isDriverVerified: createDriverDto.isDriverVerified || false,
+                    status: 'ACTIVE'
+                },
+                select: {
+                    id: true,
+                    name: true,
+                    lastName: true,
+                    email: true,
+                    phone: true,
+                    status: true,
+                    license: true,
+                    licenseExpiration: true,
+                    driverExperience: true,
+                    driverRating: true,
+                    totalTrips: true,
+                    isDriverVerified: true,
+                    profilePicture: true,
+                    createdAt: true,
+                    updatedAt: true
+                }
+            });
+
+            return {
+                id: newUser.id,
+                userId: newUser.id,
+                license: newUser.license,
+                licenseExpiration: newUser.licenseExpiration,
+                experience: newUser.driverExperience,
+                rating: newUser.driverRating,
+                totalTrips: newUser.totalTrips || 0,
+                isVerified: newUser.isDriverVerified || false,
+                createdAt: newUser.createdAt,
+                updatedAt: newUser.updatedAt || new Date(),
+                user: {
+                    id: newUser.id,
+                    name: newUser.name,
+                    email: newUser.email,
+                    phone: newUser.phone,
+                    status: newUser.status
+                }
+            };
+        } catch (error) {
+            console.error('Error in DriverRepository.createWithUserData:', error);
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw new ApiError(500, 'Error al crear conductor con datos de usuario');
         }
     }
 

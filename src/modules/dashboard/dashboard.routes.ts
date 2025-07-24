@@ -99,4 +99,93 @@ router.get('/efficiency-summary', async (req: Request, res: Response) => {
     await dashboardController.getEfficiencySummary(req, res);
 });
 
+// ==================== RUTAS ESPECÍFICAS PARA PROPIETARIOS ====================
+
+/**
+ * @swagger
+ * /dashboard/owner/stats:
+ *   get:
+ *     summary: Obtener estadísticas del propietario de unidades
+ *     tags: [Dashboard, Owner]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Estadísticas del propietario obtenidas exitosamente
+ */
+router.get('/owner/stats', async (req: Request, res: Response) => {
+    await dashboardController.getOwnerStats(req, res);
+});
+
+/**
+ * @swagger
+ * /dashboard/owner/live-routes:
+ *   get:
+ *     summary: Obtener rutas en vivo del propietario
+ *     tags: [Dashboard, Owner]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Rutas en vivo del propietario obtenidas exitosamente
+ */
+router.get('/owner/live-routes', async (req: Request, res: Response) => {
+    await dashboardController.getOwnerLiveRoutes(req, res);
+});
+
+/**
+ * @swagger
+ * /dashboard/owner/incidents:
+ *   get:
+ *     summary: Obtener incidencias del propietario
+ *     tags: [Dashboard, Owner]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Número máximo de incidencias a retornar
+ *     responses:
+ *       200:
+ *         description: Incidencias del propietario obtenidas exitosamente
+ */
+router.get('/owner/incidents', async (req: Request, res: Response) => {
+    await dashboardController.getOwnerIncidents(req, res);
+});
+
+/**
+ * @swagger
+ * /dashboard/owner/ratings:
+ *   get:
+ *     summary: Obtener resumen de calificaciones del propietario
+ *     tags: [Dashboard, Owner]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Resumen de calificaciones del propietario obtenido exitosamente
+ */
+router.get('/owner/ratings', async (req: Request, res: Response) => {
+    await dashboardController.getOwnerRatings(req, res);
+});
+
+/**
+ * @swagger
+ * /dashboard/owner/overview:
+ *   get:
+ *     summary: Obtener vista general del dashboard del propietario
+ *     tags: [Dashboard, Owner]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Vista general del propietario obtenida exitosamente
+ */
+router.get('/owner/overview', async (req: Request, res: Response) => {
+    await dashboardController.getOwnerOverview(req, res);
+});
+
 export default router;

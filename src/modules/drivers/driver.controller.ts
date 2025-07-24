@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '../../../generated/prisma';
 import { DriverRepository } from './driver.repository';
 import type { CreateDriverDto } from './dto/create-driver.dto';
+import type { CreateDriverWithUserDto } from './dto/create-driver-with-user.dto';
 import type { UpdateDriverDto } from './dto/update-driver.dto';
 
 export class DriverController {
@@ -24,12 +25,16 @@ export class DriverController {
             const currentUser = (req as any).user;
             let ownerId: number | undefined;
 
+            console.log('👤 [DRIVER CONTROLLER] Usuario actual:', currentUser);
+
             // Si el usuario es OWNER_VEHICLE, filtrar por sus drivers
             if (currentUser?.role === 'OWNER_VEHICLE') {
                 ownerId = currentUser.id;
+                console.log(`🏢 [DRIVER CONTROLLER] Usuario es OWNER_VEHICLE con ID: ${ownerId}`);
             }
             
             const drivers = await this.driverRepository.findAll(ownerId);
+            console.log(`✅ [DRIVER CONTROLLER] Encontrados ${drivers.length} drivers`);
             
             res.status(200).json({
                 success: true,
@@ -141,11 +146,26 @@ export class DriverController {
      */
     async createDriver(req: Request, res: Response): Promise<void> {
         try {
-            const driverData: CreateDriverDto = req.body;
+            const driverData = req.body;
+            const currentUser = (req as any).user;
 
             console.log('➕ [DRIVER CONTROLLER] Creando nuevo driver:', driverData);
+            console.log('👤 [DRIVER CONTROLLER] Usuario que crea:', currentUser);
             
-            const newDriver = await this.driverRepository.create(driverData);
+            let newDriver;
+            
+            // Si se proporciona userId, convertir usuario existente a driver
+            if (driverData.userId) {
+                const createDriverDto: CreateDriverDto = driverData;
+                console.log('🔄 [DRIVER CONTROLLER] Convirtiendo usuario existente a driver');
+                newDriver = await this.driverRepository.create(createDriverDto);
+            } else {
+                // Si no hay userId, crear nuevo usuario como driver
+                console.log('🆕 [DRIVER CONTROLLER] Creando nuevo usuario como driver');
+                newDriver = await this.driverRepository.createWithUserData(driverData);
+            }
+            
+            console.log('✅ [DRIVER CONTROLLER] Driver creado exitosamente:', newDriver);
             
             res.status(201).json({
                 success: true,
