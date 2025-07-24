@@ -21,6 +21,10 @@ export class RouteService implements RouteServiceInterface {
         return this.routeRepository.findByName(name);
     }
 
+    async findRoutesByOwner(ownerId: number): Promise<Route[]> {
+        return this.routeRepository.findByOwner(ownerId);
+    }
+
     async createRoute(routeData: CreateRouteDto): Promise<Route> {
         return this.routeRepository.createRoute(routeData);
     }

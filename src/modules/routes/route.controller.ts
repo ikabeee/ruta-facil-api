@@ -554,4 +554,70 @@ export class RouteController {
             return ApiResponse.error(res, 'Error interno del servidor', 500);
         }
     }
+
+    /**
+     * @swagger
+     * /routes/owner/{ownerId}:
+     *   get:
+     *     summary: Obtener rutas por propietario
+     *     description: Obtiene todas las rutas que tienen vehículos asignados de un propietario específico
+     *     tags: [Routes]
+     *     parameters:
+     *       - in: path
+     *         name: ownerId
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           minimum: 1
+     *         description: ID del propietario
+     *         example: 1
+     *     responses:
+     *       200:
+     *         description: Rutas del propietario obtenidas exitosamente
+     *         content:
+     *           application/json:
+     *             schema:
+     *               allOf:
+     *                 - $ref: '#/components/schemas/ApiResponse'
+     *                 - type: object
+     *                   properties:
+     *                     data:
+     *                       type: array
+     *                       items:
+     *                         $ref: '#/components/schemas/Route'
+     *       400:
+     *         description: ID de propietario inválido
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     *       404:
+     *         description: Propietario no encontrado
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     *       500:
+     *         description: Error interno del servidor
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     */
+    async findRoutesByOwner(req: Request, res: Response): Promise<Response> {
+        try {
+            const { ownerId } = req.params;
+            const validationError = ValidateParams.validatePositiveInteger(+ownerId);
+            if (validationError) {
+                return ApiResponse.error(res, validationError, 400);
+            }
+            const routes = await this.routeService.findRoutesByOwner(+ownerId);
+            return ApiResponse.success(res, routes, 200);
+        } catch (error: any) {
+            if (error instanceof ApiError) {
+                return ApiResponse.error(res, error.message, error.statusCode);
+            }
+            return ApiResponse.error(res, error.message, 500);
+        }
+    }
 }

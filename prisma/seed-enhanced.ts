@@ -1,4 +1,5 @@
 import { PrismaClient, UserRole, UserStatus } from '../generated/prisma';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
@@ -21,13 +22,20 @@ async function main() {
 
     console.log('🗑️  Datos existentes eliminados');
 
+    // Generar hashes de contraseñas
+    console.log('🔐 Generando hashes de contraseñas...');
+    const adminPassword = await bcrypt.hash('admin123', 10); // Contraseña: admin123
+    const userPassword = await bcrypt.hash('user123', 10);   // Contraseña: user123
+    
+    console.log('✅ Contraseñas hasheadas correctamente');
+
     // Crear usuarios admin
     const admin = await prisma.user.create({
         data: {
             name: 'Administrador',
             lastName: 'Sistema',
-            email: 'admin@rutafacil.com',
-            password: '$2b$10$8vWXnK8gKh9B0KI1rGq3Uu3OlYqRxAUJYe2XwBKJhNyFzPp8QmP7u', // password: admin123
+            email: 'carlglz30@gmail.com',
+            password: adminPassword,
             role: UserRole.ADMIN,
             status: UserStatus.ACTIVE,
             emailVerified: true,
@@ -42,7 +50,7 @@ async function main() {
                 name: 'Juan Carlos',
                 lastName: 'Pérez García',
                 email: 'juan.perez@email.com',
-                password: '$2b$10$8vWXnK8gKh9B0KI1rGq3Uu3OlYqRxAUJYe2XwBKJhNyFzPp8QmP7u', // password: user123
+                password: userPassword,
                 role: UserRole.USER,
                 status: UserStatus.ACTIVE,
                 emailVerified: true,
@@ -54,7 +62,7 @@ async function main() {
                 name: 'María Elena',
                 lastName: 'Rodríguez López',
                 email: 'maria.rodriguez@email.com',
-                password: '$2b$10$8vWXnK8gKh9B0KI1rGq3Uu3OlYqRxAUJYe2XwBKJhNyFzPp8QmP7u', // password: user123
+                password: userPassword,
                 role: UserRole.USER,
                 status: UserStatus.ACTIVE,
                 emailVerified: true,
@@ -69,9 +77,9 @@ async function main() {
             data: {
                 name: 'Pedro',
                 lastName: 'Martínez Sánchez',
-                email: 'pedro.martinez@email.com',
-                password: '$2b$10$8vWXnK8gKh9B0KI1rGq3Uu3OlYqRxAUJYe2XwBKJhNyFzPp8QmP7u', // password: user123
-                role: UserRole.DRIVER,
+                email: 'middle606@gmail.com',
+                password: userPassword,
+                role: UserRole.OWNER_VEHICLE,
                 status: UserStatus.ACTIVE,
                 emailVerified: true,
                 phone: '+52 123 456 7893',
@@ -89,7 +97,7 @@ async function main() {
                 name: 'Ana',
                 lastName: 'González Fernández',
                 email: 'ana.gonzalez@email.com',
-                password: '$2b$10$8vWXnK8gKh9B0KI1rGq3Uu3OlYqRxAUJYe2XwBKJhNyFzPp8QmP7u', // password: user123
+                password: userPassword,
                 role: UserRole.DRIVER,
                 status: UserStatus.ACTIVE,
                 emailVerified: true,
@@ -108,7 +116,7 @@ async function main() {
                 name: 'Carlos',
                 lastName: 'Ramírez Morales',
                 email: 'carlos.ramirez@email.com',
-                password: '$2b$10$8vWXnK8gKh9B0KI1rGq3Uu3OlYqRxAUJYe2XwBKJhNyFzPp8QmP7u', // password: user123
+                password: userPassword,
                 role: UserRole.DRIVER,
                 status: UserStatus.ACTIVE,
                 emailVerified: true,
@@ -131,7 +139,7 @@ async function main() {
                 name: 'Roberto',
                 lastName: 'Hernández Silva',
                 email: 'roberto.hernandez@email.com',
-                password: '$2b$10$8vWXnK8gKh9B0KI1rGq3Uu3OlYqRxAUJYe2XwBKJhNyFzPp8QmP7u', // password: user123
+                password: userPassword,
                 role: UserRole.OWNER_VEHICLE,
                 status: UserStatus.ACTIVE,
                 emailVerified: true,
@@ -151,7 +159,7 @@ async function main() {
                 name: 'Laura',
                 lastName: 'Jiménez Vargas',
                 email: 'laura.jimenez@email.com',
-                password: '$2b$10$8vWXnK8gKh9B0KI1rGq3Uu3OlYqRxAUJYe2XwBKJhNyFzPp8QmP7u', // password: user123
+                password: userPassword,
                 role: UserRole.OWNER_VEHICLE,
                 status: UserStatus.ACTIVE,
                 emailVerified: true,

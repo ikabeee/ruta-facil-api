@@ -6,6 +6,7 @@ export interface RouteServiceInterface {
     findAllRoutes(): Promise<Route[]>;
     findRouteById(id: number): Promise<Route>;
     findRoutesByName(name: string): Promise<Route[]>;
+    findRoutesByOwner(ownerId: number): Promise<Route[]>;
     createRoute(routeData: CreateRouteDto): Promise<Route>;
     updateRoute(id: number, routeData: UpdateRouteDto): Promise<Route>;
     deleteRoute(id: number): Promise<void>;

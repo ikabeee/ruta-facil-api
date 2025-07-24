@@ -82,12 +82,25 @@ export class DashboardService implements DashboardServiceInterface {
     /**
      * Obtener estado de rutas en tiempo real
      */
-    async getLiveRoutesStatus(): Promise<LiveRouteStatus[]> {
+    async getLiveRoutesStatus(ownerId?: number): Promise<LiveRouteStatus[]> {
         try {
+            const whereClause: any = {
+                status: 'ACTIVE'
+            };
+
+            // Si se proporciona ownerId, filtrar por rutas asignadas a vehículos de ese propietario
+            if (ownerId) {
+                whereClause.vehicleAssignments = {
+                    some: {
+                        vehicle: {
+                            ownerId: ownerId
+                        }
+                    }
+                };
+            }
+
             const routes = await this.prisma.route.findMany({
-                where: {
-                    status: 'ACTIVE'
-                },
+                where: whereClause,
                 include: {
                     incidents: {
                         where: {
@@ -242,7 +255,7 @@ export class DashboardService implements DashboardServiceInterface {
         try {
             const [stats, liveRoutes, recentIncidents, ratingsSummary] = await Promise.all([
                 this.getGeneralStats(),
-                this.getLiveRoutesStatus(),
+                this.getLiveRoutesStatus(), // Sin filtro para la vista general
                 this.getRecentIncidents(5),
                 this.getRatingsSummary()
             ]);

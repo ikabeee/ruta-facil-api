@@ -54,6 +54,40 @@ export class RouteRepository implements RouteRepositoryInterface {
         }
     }
 
+    async findByOwner(ownerId: number): Promise<Route[]> {
+        try {
+            // Buscar rutas que tienen vehículos asignados de un propietario específico
+            const routes = await this.prisma.route.findMany({
+                where: {
+                    vehicleAssignments: {
+                        some: {
+                            vehicle: {
+                                ownerId: ownerId
+                            }
+                        }
+                    }
+                },
+                include: {
+                    vehicleAssignments: {
+                        include: {
+                            vehicle: {
+                                include: {
+                                    owner: true
+                                }
+                            }
+                        }
+                    }
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                }
+            });
+            return routes;
+        } catch (error: any) {
+            throw new ApiError(500, `Error al buscar rutas del propietario con id ${ownerId}: ${error.message}`);
+        }
+    }
+
     async createRoute(routeData: CreateRouteDto): Promise<Route> {
         try {
             const route = await this.prisma.route.create({

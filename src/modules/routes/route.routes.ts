@@ -17,6 +17,7 @@ router.use(authMiddleware);
 router.get('/stats', async (req: Request, res: Response) => { await routeController.getStats(req, res); });
 router.get('/', async (req: Request, res: Response) => { await routeController.findAllRoutes(req, res); });
 router.get('/search', async (req: Request, res: Response) => { await routeController.findRoutesByName(req, res); });
+router.get('/owner/:ownerId', async (req: Request, res: Response) => { await routeController.findRoutesByOwner(req, res); });
 router.get('/:id', async (req: Request, res: Response) => { await routeController.findRouteById(req, res); });
 router.post('/create', async (req: Request, res: Response) => { await routeController.createRoute(req, res); });
 router.put('/update/:id', async (req: Request, res: Response) => { await routeController.updateRoute(req, res); });

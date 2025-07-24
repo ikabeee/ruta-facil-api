@@ -74,7 +74,16 @@ export class DashboardController {
      */
     async getLiveRoutes(req: Request, res: Response): Promise<Response> {
         try {
-            const liveRoutes = await this.dashboardService.getLiveRoutesStatus();
+            // Obtener el usuario actual del middleware de autenticación
+            const currentUser = (req as any).user;
+            let ownerId: number | undefined;
+
+            // Si el usuario es OWNER_VEHICLE, filtrar por sus rutas
+            if (currentUser?.role === 'OWNER_VEHICLE') {
+                ownerId = currentUser.id;
+            }
+
+            const liveRoutes = await this.dashboardService.getLiveRoutesStatus(ownerId);
             return ApiResponse.success(res, liveRoutes, 200);
         } catch (error: any) {
             if (error instanceof ApiError) {

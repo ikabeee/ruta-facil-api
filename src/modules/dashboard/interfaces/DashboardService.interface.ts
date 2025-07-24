@@ -77,7 +77,7 @@ export interface DashboardOverview {
 
 export interface DashboardServiceInterface {
     getGeneralStats(): Promise<DashboardStats>;
-    getLiveRoutesStatus(): Promise<LiveRouteStatus[]>;
+    getLiveRoutesStatus(ownerId?: number): Promise<LiveRouteStatus[]>;
     getRecentIncidents(limit?: number): Promise<IncidentSummary[]>;
     getRatingsSummary(): Promise<RatingsSummary[]>;
     getOverview(): Promise<DashboardOverview>;

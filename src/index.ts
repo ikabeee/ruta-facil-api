@@ -10,6 +10,7 @@ dotenv.config();
 import { corsConfig } from './shared/config/corsConfig';
 /* Rutas */
 import userRoutes from './modules/users/user.routes';
+import driverRoutes from './modules/drivers/driver.routes';
 import routesRoutes from './modules/routes/route.routes';
 import ratingsRoutes from './modules/ratings/rating.routes';
 import starredRoutes from './modules/starred-route/starred-route.routes';
@@ -43,6 +44,7 @@ console.log('✅ Rutas de auth registradas en /api/v1/auth');
 app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/incidents', incidentsRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/drivers', driverRoutes);
 app.use('/api/v1/routes', routesRoutes);
 app.use('/api/v1/ratings', ratingsRoutes);
 app.use('/api/v1/starred-routes', starredRoutes);
