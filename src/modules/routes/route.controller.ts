@@ -620,4 +620,65 @@ export class RouteController {
             return ApiResponse.error(res, error.message, 500);
         }
     }
+
+    /**
+     * @swagger
+     * /routes/search:
+     *   get:
+     *     summary: Buscar rutas por nombre
+     *     description: Busca rutas que coincidan con el término de búsqueda en nombre, origen o destino
+     *     tags: [Routes]
+     *     parameters:
+     *       - in: query
+     *         name: q
+     *         required: true
+     *         schema:
+     *           type: string
+     *           minimum: 1
+     *         description: Término de búsqueda
+     *         example: "Centro"
+     *     responses:
+     *       200:
+     *         description: Rutas encontradas exitosamente
+     *         content:
+     *           application/json:
+     *             schema:
+     *               allOf:
+     *                 - $ref: '#/components/schemas/ApiResponse'
+     *                 - type: object
+     *                   properties:
+     *                     data:
+     *                       type: array
+     *                       items:
+     *                         $ref: '#/components/schemas/Route'
+     *       400:
+     *         description: Término de búsqueda inválido
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     *       500:
+     *         description: Error interno del servidor
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     */
+    async searchRoutes(req: Request, res: Response): Promise<Response> {
+        try {
+            const { q } = req.query;
+            
+            if (!q || typeof q !== 'string' || q.trim().length === 0) {
+                return ApiResponse.error(res, "El término de búsqueda es requerido", 400);
+            }
+
+            const routes = await this.routeService.searchRoutes(q.trim());
+            return ApiResponse.success(res, routes, 200);
+        } catch (error: any) {
+            if (error instanceof ApiError) {
+                return ApiResponse.error(res, error.message, error.statusCode);
+            }
+            return ApiResponse.error(res, error.message, 500);
+        }
+    }
 }

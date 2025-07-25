@@ -24,6 +24,14 @@ import dashboardRoutes from './modules/dashboard/dashboard.routes';
 import incidentsRoutes from './modules/incidents/incidents.routes';
 import scheduleRoutes from './modules/schedules/schedule.routes';
 import { authRoutes } from './modules/auth/auth.routes';
+// Usar archivos JavaScript para evitar problemas de TypeScript
+const publicRouteRoutes = require('./modules/routes/public-route-minimal.js');
+const routeTrackingPublic = require('./modules/routes/public-route-tracking.js');
+const locationRoutes = require('./modules/location/public-location-minimal.js');
+const starredRoutesPublic = require('./modules/starred-route/public-starred-route-minimal.js');
+const incidentsPublic = require('./modules/incidents/public-incidents-minimal.js');
+const trackingPublic = require('./modules/tracking/public-tracking.js');
+const { routeTracker } = require('./modules/tracking/websocket-tracker.js');
 import { setupSwagger } from './shared/config/swagger.config';
 
 const app = express();
@@ -55,6 +63,21 @@ app.use('/api/v1/vehicle-locations', vehicleLocationRoutes);
 app.use('/api/v1/vehicle-assignments', vehicleAssignmentRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/schedules', scheduleRoutes);
+
+// Rutas públicas sin autenticación para desarrollo
+console.log('🔗 Registrando rutas públicas...');
+app.use('/api/v1/public/routes', publicRouteRoutes);
+console.log('✅ Rutas públicas de routes registradas en /api/v1/public/routes');
+app.use('/api/v1/public/route-tracking', routeTrackingPublic);
+console.log('✅ Rutas públicas de route-tracking registradas en /api/v1/public/route-tracking');
+app.use('/api/v1/public/location', locationRoutes);
+console.log('✅ Rutas públicas de location registradas en /api/v1/public/location');
+app.use('/api/v1/public/starred-routes', starredRoutesPublic);
+console.log('✅ Rutas públicas de starred-routes registradas en /api/v1/public/starred-routes');
+app.use('/api/v1/public/incidents', incidentsPublic);
+console.log('✅ Rutas públicas de incidents registradas en /api/v1/public/incidents');
+app.use('/api/v1/public/tracking', trackingPublic);
+console.log('✅ Rutas públicas de tracking registradas en /api/v1/public/tracking');
 /* */
 
 // Configurar Swagger
@@ -75,12 +98,27 @@ app.get('/health', (req, res) => {
 });
 
 dotenv.config();
-const PORT = process.env.PORT || 7000; // Cambiado a 7000 para coincidir con el frontend
+const PORT = Number(process.env.PORT) || 7000; // Convertir a número
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 El servidor está corriendo en el puerto: ${PORT}`);
     console.log(`📚 Documentación Swagger disponible en: http://localhost:${PORT}/api-docs`);
     console.log(`🔍 Health check disponible en: http://localhost:${PORT}/health`);
     console.log(`🔐 Google OAuth disponible en: http://localhost:${PORT}/api/v1/auth/google`);
     console.log(`🌐 Frontend URL configurada: ${process.env.FRONTEND_URL}`);
+    console.log(`🌐 Servidor accesible desde: http://192.168.1.74:${PORT}`);
+    console.log(`🌐 Endpoints públicos disponibles:`);
+    console.log(`   📍 Location: http://192.168.1.74:${PORT}/api/v1/public/location/current`);
+    console.log(`   🚌 Routes: http://192.168.1.74:${PORT}/api/v1/public/routes`);
+    console.log(`   🔍 Search: http://192.168.1.74:${PORT}/api/v1/public/routes/search`);
+    console.log(`   📍 Route Tracking: http://192.168.1.74:${PORT}/api/v1/public/route-tracking/1`);
+    console.log(`   🚐 Vehicle Tracking: http://192.168.1.74:${PORT}/api/v1/public/route-tracking/1/vehicles`);
+    console.log(`   ⭐ Favorites: http://192.168.1.74:${PORT}/api/v1/public/starred-routes`);
+    console.log(`   🚨 Incidents: http://192.168.1.74:${PORT}/api/v1/public/incidents`);
+    console.log(`   📍 Tracking: http://192.168.1.74:${PORT}/api/v1/public/tracking`);
+    
+    // Inicializar WebSocket para seguimiento en tiempo real
+    console.log('🔌 Iniciando WebSocket para seguimiento de rutas...');
+    routeTracker.startTracking(server);
+    console.log(`🔌 WebSocket disponible en: ws://192.168.1.74:${PORT}/ws/route-tracking`);
 });
