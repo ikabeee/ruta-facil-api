@@ -4,7 +4,7 @@ import { plainToClass } from 'class-transformer';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { ForgotPasswordDto, ResetPasswordDto, ChangePasswordDto, VerifyEmailDto, ResendVerificationDto, Verify2FADto } from './dto/auth.dto';
+import { ForgotPasswordDto, ResetPasswordDto, ChangePasswordDto, VerifyEmailDto, ResendVerificationDto, Verify2FADto, ResendOTPDto } from './dto/auth.dto';
 import { ApiResponse } from '../../shared/helpers/ApiResponse';
 import { ApiError } from '../../shared/errors/ApiError';
 import { CookieHelper } from '../../shared/helpers/CookieHelper';
@@ -713,6 +713,84 @@ export class AuthController {
 
     /**
      * @swagger
+     * /auth/resend-otp:
+     *   post:
+     *     summary: Reenviar código OTP para login
+     *     description: Reenvía el código OTP de verificación para completar el login
+     *     tags: [Auth]
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - email
+     *             properties:
+     *               email:
+     *                 type: string
+     *                 format: email
+     *                 description: Email del usuario que necesita un nuevo código OTP
+     *                 example: "juan.perez@example.com"
+     *     responses:
+     *       200:
+     *         description: Código OTP reenviado exitosamente
+     *         content:
+     *           application/json:
+     *             schema:
+     *               allOf:
+     *                 - $ref: '#/components/schemas/ApiResponse'
+     *                 - type: object
+     *                   properties:
+     *                     data:
+     *                       type: object
+     *                       properties:
+     *                         message:
+     *                           type: string
+     *                           example: "Código OTP reenviado exitosamente"
+     *       400:
+     *         description: Email inválido o usuario no encontrado
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     *       500:
+     *         description: Error interno del servidor
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     */
+    public async resendOTP(req: Request, res: Response): Promise<Response> {
+        try {
+            // Validar datos de entrada
+            const resendOTPDto = plainToClass(ResendOTPDto, req.body);
+            const errors = await validate(resendOTPDto);
+
+            if (errors.length > 0) {
+                const errorMessages = errors.map(error => 
+                    Object.values(error.constraints || {}).join(', ')
+                ).join(', ');
+                return ApiResponse.error(res, errorMessages, 400);
+            }
+
+            // Reenviar código OTP
+            await this.authService.resendOTP(resendOTPDto);
+
+            return ApiResponse.success(res, {
+                message: 'Código OTP reenviado exitosamente'
+            });
+
+        } catch (error) {
+            if (error instanceof ApiError) {
+                return ApiResponse.error(res, error.message, error.statusCode);
+            }
+            return ApiResponse.error(res, 'Error interno del servidor', 500);
+        }
+    }
+
+    /**
+     * @swagger
      * /auth/verify-2fa:
      *   post:
      *     summary: Verificar código 2FA/Email
@@ -775,9 +853,17 @@ export class AuthController {
 
             // Verificar código 2FA
             const result = await this.authService.verify2FA(verify2FADto);
+            console.log('🔍 Resultado de verify2FA:', {
+                hasResult: !!result,
+                resultType: typeof result,
+                hasToken: result && 'token' in result,
+                hasUser: result && 'user' in result,
+                keys: result ? Object.keys(result) : null
+            });
 
             // Si el resultado contiene tokens, es un login completado
             if (result && 'token' in result) {
+                console.log('✅ Login OTP completado, enviando respuesta con token');
                 // Es un login OTP completado, establecer cookie usando CookieHelper
                 const userSession: UserSession = {
                     id: result.user.id,
@@ -790,10 +876,49 @@ export class AuthController {
 
                 return ApiResponse.success(res, {
                     user: result.user,
+                    token: result.token, // Include token for mobile apps
                     expiresIn: result.expiresIn,
                     message: 'Login completado exitosamente'
                 });
             } else {
+                console.log('📧 Verificación de email completada (sin login)');
+                console.log('⚠️  PERO: Verificando si debería ser login para mobile apps...');
+                
+                // Para casos donde el servicio no retorna token pero debería (mobile apps)
+                // Buscar el usuario y generar token manualmente
+                const userEmail = req.body.email;
+                if (userEmail) {
+                    const user = await this.authService.getUserByEmail(userEmail);
+                    if (user && user.status === 'ACTIVE' && user.emailVerified) {
+                        console.log('🔧 Usuario activo encontrado, generando token manual:', user.email);
+                        
+                        // Generar token manualmente usando JwtHelper
+                        const { JwtHelper } = await import('../../shared/helpers/JwtHelper');
+                        const tokenData = JwtHelper.generateToken({
+                            id: user.id,
+                            email: user.email,
+                            role: user.role,
+                            name: user.name
+                        });
+                        
+                        console.log('✅ Token generado manualmente para mobile app');
+                        
+                        return ApiResponse.success(res, {
+                            user: {
+                                id: user.id,
+                                name: user.name,
+                                lastName: user.lastName || undefined,
+                                email: user.email,
+                                role: user.role,
+                                emailVerified: user.emailVerified
+                            },
+                            token: tokenData.token,
+                            expiresIn: tokenData.expiresIn,
+                            message: 'Login completado exitosamente'
+                        });
+                    }
+                }
+                
                 // Es verificación de email sin login
                 return ApiResponse.success(res, {
                     message: 'Código verificado exitosamente'

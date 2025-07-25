@@ -57,3 +57,9 @@ export class Verify2FADto {
     @IsEmail({}, { message: "El email debe ser válido" })
     email?: string;
 }
+
+export class ResendOTPDto {
+    @IsNotEmpty({ message: "El email es obligatorio" })
+    @IsEmail({}, { message: "El email debe ser válido" })
+    email!: string;
+}

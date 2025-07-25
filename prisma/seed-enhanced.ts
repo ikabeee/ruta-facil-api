@@ -79,7 +79,7 @@ async function main() {
                 lastName: 'Martínez Sánchez',
                 email: 'middle606@gmail.com',
                 password: userPassword,
-                role: UserRole.OWNER_VEHICLE,
+                role: UserRole.USER,
                 status: UserStatus.ACTIVE,
                 emailVerified: true,
                 phone: '+52 123 456 7893',
@@ -96,7 +96,7 @@ async function main() {
             data: {
                 name: 'Ana',
                 lastName: 'González Fernández',
-                email: 'ana.gonzalez@email.com',
+                email: 'jorgeglzmollinedo@gmail.com',
                 password: userPassword,
                 role: UserRole.DRIVER,
                 status: UserStatus.ACTIVE,

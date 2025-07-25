@@ -1,7 +1,7 @@
 import { Response } from "express";
 import { LoginDto } from "../dto/login.dto";
 import { RegisterDto } from "../dto/register.dto";
-import { ForgotPasswordDto, ResetPasswordDto, ChangePasswordDto, VerifyEmailDto, ResendVerificationDto } from "../dto/auth.dto";
+import { ForgotPasswordDto, ResetPasswordDto, ChangePasswordDto, VerifyEmailDto, ResendVerificationDto, ResendOTPDto } from "../dto/auth.dto";
 import { AuthResponse, UserSession } from "./Auth.interface";
 import { User } from "../../../../generated/prisma";
 
@@ -13,6 +13,7 @@ export interface AuthServiceInterface {
     changePassword(userId: number, data: ChangePasswordDto): Promise<void>;
     verifyEmail(data: VerifyEmailDto): Promise<void>;
     resendVerification(data: ResendVerificationDto): Promise<void>;
+    resendOTP(data: ResendOTPDto): Promise<void>;
     getCurrentUser(userId: number): Promise<User>;
     refreshToken(userId: number): Promise<AuthResponse>;
     logout(userId: number, res?: Response): Promise<void>;
