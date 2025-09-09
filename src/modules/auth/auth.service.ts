@@ -158,8 +158,6 @@ export class AuthService implements AuthServiceInterface {
      */
     async completeLoginAfterOTP(email: string): Promise<AuthResponse> {
         try {
-            console.log('🔄 Iniciando completeLoginAfterOTP para:', email);
-            
             // Obtener usuario por email
             const user = await this.getUserByEmail(email);
             if (!user) {
@@ -179,10 +177,7 @@ export class AuthService implements AuthServiceInterface {
                 name: user.name
             });
 
-            console.log('🎫 Token generado exitosamente. Length:', tokenData.token.length);
-            console.log('⏰ Token expira en:', tokenData.expiresIn, 'segundos');
-
-            const authResponse = {
+            return {
                 user: {
                     id: user.id,
                     name: user.name,
@@ -194,15 +189,6 @@ export class AuthService implements AuthServiceInterface {
                 token: tokenData.token,
                 expiresIn: tokenData.expiresIn
             };
-
-            console.log('✅ AuthResponse creado exitosamente:', {
-                hasUser: !!authResponse.user,
-                hasToken: !!authResponse.token,
-                tokenLength: authResponse.token.length,
-                userEmail: authResponse.user.email
-            });
-
-            return authResponse;
         } catch (error) {
             if (error instanceof ApiError) {
                 throw error;
@@ -479,32 +465,15 @@ export class AuthService implements AuthServiceInterface {
                         }
                         
                         // Verificar si es para login OTP (usuario activo) o verificación de email (pendiente)
-                        console.log('🔍 Verificando condiciones del usuario:');
-                        console.log('- Status:', foundUser.status);
-                        console.log('- EmailVerified:', foundUser.emailVerified);
-                        console.log('- UserStatus.ACTIVE:', UserStatus.ACTIVE);
-                        
                         if (foundUser.status === UserStatus.ACTIVE && foundUser.emailVerified) {
                             // Es un OTP para completar login
-                            console.log('� Procesando OTP para completar login');
-                            
-                            // TEMPORAL: Permitir ciertos códigos para testing
-                            const testCodes = ['123456', '000000', '111111', '999999'];
-                            if (testCodes.includes(data.code)) {
-                                console.log('✅ Código de testing aceptado, completando login');
-                                const loginResult = await this.completeLoginAfterOTP(foundUser.email);
-                                console.log('🎫 Login result:', { hasToken: !!loginResult.token, hasUser: !!loginResult.user });
-                                return loginResult;
-                            }
+                            console.log('🔓 Procesando OTP para completar login');
                             
                             // Validar código OTP usando el nuevo método
                             if (this.validateOTPCodeForEmail(foundUser.email, data.code)) {
                                 console.log('✅ OTP válido, completando login');
-                                const loginResult = await this.completeLoginAfterOTP(foundUser.email);
-                                console.log('🎫 Login result:', { hasToken: !!loginResult.token, hasUser: !!loginResult.user });
-                                return loginResult;
+                                return await this.completeLoginAfterOTP(foundUser.email);
                             } else {
-                                console.log('❌ OTP inválido para login');
                                 throw new ApiError(400, 'Código OTP inválido o expirado');
                             }
                         } else if (!foundUser.emailVerified || foundUser.status === UserStatus.PENDING) {

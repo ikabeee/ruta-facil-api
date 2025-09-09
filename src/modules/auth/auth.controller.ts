@@ -853,17 +853,9 @@ export class AuthController {
 
             // Verificar código 2FA
             const result = await this.authService.verify2FA(verify2FADto);
-            console.log('🔍 Resultado de verify2FA:', {
-                hasResult: !!result,
-                resultType: typeof result,
-                hasToken: result && 'token' in result,
-                hasUser: result && 'user' in result,
-                keys: result ? Object.keys(result) : null
-            });
 
             // Si el resultado contiene tokens, es un login completado
             if (result && 'token' in result) {
-                console.log('✅ Login OTP completado, enviando respuesta con token');
                 // Es un login OTP completado, establecer cookie usando CookieHelper
                 const userSession: UserSession = {
                     id: result.user.id,
@@ -881,44 +873,6 @@ export class AuthController {
                     message: 'Login completado exitosamente'
                 });
             } else {
-                console.log('📧 Verificación de email completada (sin login)');
-                console.log('⚠️  PERO: Verificando si debería ser login para mobile apps...');
-                
-                // Para casos donde el servicio no retorna token pero debería (mobile apps)
-                // Buscar el usuario y generar token manualmente
-                const userEmail = req.body.email;
-                if (userEmail) {
-                    const user = await this.authService.getUserByEmail(userEmail);
-                    if (user && user.status === 'ACTIVE' && user.emailVerified) {
-                        console.log('🔧 Usuario activo encontrado, generando token manual:', user.email);
-                        
-                        // Generar token manualmente usando JwtHelper
-                        const { JwtHelper } = await import('../../shared/helpers/JwtHelper');
-                        const tokenData = JwtHelper.generateToken({
-                            id: user.id,
-                            email: user.email,
-                            role: user.role,
-                            name: user.name
-                        });
-                        
-                        console.log('✅ Token generado manualmente para mobile app');
-                        
-                        return ApiResponse.success(res, {
-                            user: {
-                                id: user.id,
-                                name: user.name,
-                                lastName: user.lastName || undefined,
-                                email: user.email,
-                                role: user.role,
-                                emailVerified: user.emailVerified
-                            },
-                            token: tokenData.token,
-                            expiresIn: tokenData.expiresIn,
-                            message: 'Login completado exitosamente'
-                        });
-                    }
-                }
-                
                 // Es verificación de email sin login
                 return ApiResponse.success(res, {
                     message: 'Código verificado exitosamente'

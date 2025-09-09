@@ -6,10 +6,7 @@ import { UpdateStarredRouteDto } from "../dto/update-starred-route.dto";
 export interface StarredRouteRepositoryInterface {
     findAll(): Promise<StarredRoute[]>;
     findById(id: number): Promise<StarredRoute>;
-    findByUserId(userId: number): Promise<StarredRoute[]>;
-    findByUserAndRoute(userId: number, routeId: number): Promise<StarredRoute | null>;
     createStarredRoute(starredRouteData: CreateStarredRouteDto): Promise<StarredRoute>;
     updateStarredRoute(id: number, starredRouteData: UpdateStarredRouteDto): Promise<StarredRoute>;
     deleteStarredRoute(id: number): Promise<void>;
-    deleteByUserAndRoute(userId: number, routeId: number): Promise<void>;
 }

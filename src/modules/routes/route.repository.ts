@@ -88,47 +88,6 @@ export class RouteRepository implements RouteRepositoryInterface {
         }
     }
 
-    async searchRoutes(searchTerm: string): Promise<Route[]> {
-        try {
-            const routes = await this.prisma.route.findMany({
-                where: {
-                    OR: [
-                        {
-                            name: {
-                                contains: searchTerm,
-                                mode: 'insensitive'
-                            }
-                        },
-                        {
-                            firstPoint: {
-                                contains: searchTerm,
-                                mode: 'insensitive'
-                            }
-                        },
-                        {
-                            lastPoint: {
-                                contains: searchTerm,
-                                mode: 'insensitive'
-                            }
-                        },
-                        {
-                            description: {
-                                contains: searchTerm,
-                                mode: 'insensitive'
-                            }
-                        }
-                    ]
-                },
-                orderBy: {
-                    name: 'asc'
-                }
-            });
-            return routes;
-        } catch (error: any) {
-            throw new ApiError(500, `Error al buscar rutas con término "${searchTerm}": ${error.message}`);
-        }
-    }
-
     async createRoute(routeData: CreateRouteDto): Promise<Route> {
         try {
             const route = await this.prisma.route.create({

@@ -11,9 +11,6 @@ export class StarredRouteRepository implements StarredRouteRepositoryInterface {
 
     async findAll(): Promise<StarredRoute[]> {
         const starredRoutes = await this.prisma.starredRoute.findMany({
-            include: {
-                routes: true
-            },
             orderBy: {
                 createdAt: 'desc'
             }
@@ -24,10 +21,7 @@ export class StarredRouteRepository implements StarredRouteRepositoryInterface {
     async findById(id: number): Promise<StarredRoute> {
         try {
             const starredRoute = await this.prisma.starredRoute.findUnique({
-                where: { id },
-                include: {
-                    routes: true
-                }
+                where: { id }
             });
             if (!starredRoute) {
                 throw new ApiError(404, `Ruta favorita con id ${id} no encontrada.`);
@@ -38,40 +32,6 @@ export class StarredRouteRepository implements StarredRouteRepositoryInterface {
                 throw error;
             }
             throw new ApiError(500, `Error al buscar la ruta favorita con id ${id}`);
-        }
-    }
-
-    async findByUserId(userId: number): Promise<StarredRoute[]> {
-        try {
-            const starredRoutes = await this.prisma.starredRoute.findMany({
-                where: { userId },
-                include: {
-                    routes: true
-                },
-                orderBy: {
-                    createdAt: 'desc'
-                }
-            });
-            return starredRoutes;
-        } catch (error: any) {
-            throw new ApiError(500, `Error al buscar rutas favoritas del usuario ${userId}: ${error.message}`);
-        }
-    }
-
-    async findByUserAndRoute(userId: number, routeId: number): Promise<StarredRoute | null> {
-        try {
-            const starredRoute = await this.prisma.starredRoute.findFirst({
-                where: {
-                    userId,
-                    routeId
-                },
-                include: {
-                    routes: true
-                }
-            });
-            return starredRoute;
-        } catch (error: any) {
-            throw new ApiError(500, `Error al buscar ruta favorita: ${error.message}`);
         }
     }
 
@@ -134,28 +94,6 @@ export class StarredRouteRepository implements StarredRouteRepositoryInterface {
                 throw error;
             }
             throw new ApiError(500, `Error al eliminar la ruta favorita con id ${id}`);
-        }
-    }
-
-    async deleteByUserAndRoute(userId: number, routeId: number): Promise<void> {
-        try {
-            const starredRoute = await this.prisma.starredRoute.findFirst({
-                where: {
-                    userId,
-                    routeId
-                }
-            });
-            if (!starredRoute) {
-                throw new ApiError(404, `Ruta favorita no encontrada para el usuario ${userId} y ruta ${routeId}.`);
-            }
-            await this.prisma.starredRoute.delete({
-                where: { id: starredRoute.id }
-            });
-        } catch (error: any) {
-            if (error instanceof ApiError) {
-                throw error;
-            }
-            throw new ApiError(500, `Error al eliminar la ruta favorita: ${error.message}`);
         }
     }
 }
